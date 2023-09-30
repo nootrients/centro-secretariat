@@ -1,0 +1,44 @@
+<div style="text-align:center">
+    <h1>Setting of Parameters for the Automated Eligibility Checking</h1>
+</div>
+
+<hr>
+<br/>
+
+<form>
+    <!-- 
+        Essential for validation of the applicant's certificate of registration.
+    -->
+    <h4>Academic Term</h4>
+    <select id="academicTerm" name="academicTerm">
+        <option value="2022-2023">2022-2023</option>
+        <option value="2023-2024">2023-2024</option>
+        <option value="2024-2025">2024-2025</option>
+        <option value="2026-2027">2026-2027</option>
+        <option value="2027-2028">2027-2028</option>
+        <option value="2028-2029">2028-2029</option>
+        <option value="2029-2030">2029-2030</option>
+    </select>
+
+    <h4>Semester</h4>
+    <input type="radio" id="firstSemester" name="semester" value="first semester">
+    <label for = "firstSemester">First Semester</label>
+    <br/>
+    <input type="radio" id="secondSemester" name="semester" value="second semester">
+    <label for = "secondSemester">Second Semester</label>
+    <br/>
+
+    <!-- 
+        Essential for validation of the applicant's voter's certification, a requirement by Taguig Scholarships.
+        
+        Upon retrieval using OCR, it shall be compared with the values (using concatenation) presented, thus proving if
+        the applicant is a registered and active voter of the municipality.
+    -->
+    <h4>Voter's Certification Year of Issuance</h4>
+    <select id="voterEligibility" name="voterEligibility">
+        <option value="2017-2023">2017-2023</option>
+        <option value="2024-2030">2024-2030</option>
+        <option value="2031-2037">2031-2037</option>
+        <option value="2038-2042">2038-2042</option>
+    </select>
+</form>
