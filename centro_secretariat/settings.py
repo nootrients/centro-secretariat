@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     # local
     'index',
     'application',
+    'accounts',
     'head',
 ]
 

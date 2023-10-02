@@ -24,6 +24,9 @@ urlpatterns = [
     # Scholarship Submission / Retrieval / Tracking
     path('application/', include('application.urls')),
 
+    # Single Login Module for all Users
+    path('accounts/login/', include('accounts.urls')),
+
     # Path for Head Scholarship Officer as a SuperUser
     path('admin/', admin.site.urls),
     
