@@ -1,46 +1,69 @@
+from .custom_mixins import AllowPUTAsCreateMixin
+
 from django.shortcuts import HttpResponse
 from django.shortcuts import get_object_or_404
 
 from django.contrib.auth.hashers import make_password
 
 from accounts.models import CustomUser, Head, Officer, Scholar
-from accounts.models import UserProfile, HeadProfile, OfficerProfile, ScholarProfile
+from accounts.models import HeadProfile, OfficerProfile, ScholarProfile
 
 from accounts.serializers import AccountSerializer, AccountDetailSerializer, HeadSerializer, OfficerSerializer, ScholarSerializer
-from accounts.serializers import UserProfileSerializer, HeadProfileSerializer, OfficerProfileSerializer, ScholarProfileSerializer
+from accounts.serializers import HeadProfileSerializer, OfficerProfileSerializer, ScholarProfileSerializer
+
+from accounts.permissions import IsLinkedUser, IsHeadOfficer, IsAdminOfficer, IsSelfOrAdminUser
 
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
+from rest_framework.viewsets import ModelViewSet
+from rest_framework import generics
+
+from rest_framework.permissions import IsAdminUser, DjangoModelPermissions
+
 
 
 class HeadList(generics.ListAPIView):
-    """Retrieves all the registered users who has the role of `HEAD`."""
+    """
+    Retrieves all the registered users who has the role of `HEAD`.
+    """
+    
+    permission_classes = [IsAdminUser | IsHeadOfficer]
     queryset = Head.objects.all()
     serializer_class = HeadSerializer
 
 
 class OfficerList(generics.ListAPIView):
-    """Retrieves all the registered users who has the role of `OFFICER`."""
+    """
+    Retrieves all the registered users who has the role of `OFFICER`.
+    """
+
+    permission_classes = [IsAdminUser | IsHeadOfficer]
     queryset = Officer.objects.all()
     serializer_class = OfficerSerializer
 
 
 class ScholarList(generics.ListAPIView):
-    """Retrieves all the registered users who has the role of `SCHOLAR`."""
+    """
+    Retrieves all the registered users who has the role of `SCHOLAR`.
+    """
+
+    permission_classes = [IsAdminUser | IsHeadOfficer]
     queryset = Scholar.objects.all()
     serializer_class = ScholarSerializer
 
 
 class AccountViewSet(ModelViewSet):
-    """Retrieves all the currently registered users regardless of their roles (Head, Officers, Scholars). Also allows the superuser to `CREATE`, `READ`, `UPDATE`, and `DELETE`."""
+    """
+    Retrieves all the currently registered users regardless of their roles (Head, Officers, Scholars). 
+    Also allows the superuser to `CREATE`, `READ`, `UPDATE`, and `DELETE`.
+    """
+
+    permission_classes=[IsAdminUser]
     queryset = CustomUser.objects.all()
     serializer_class = AccountSerializer
     
     lookup_field = 'username'
-
-    #permission_classes=[IsAuthenticated]
 
     def get_object(self):
         queryset = self.filter_queryset(self.get_queryset())
@@ -52,7 +75,10 @@ class AccountViewSet(ModelViewSet):
     
     @action(detail=False, methods=['POST'])
     def create_user(self, request):
-        """Allows the superuser to manually `CREATE` a user. There is no need to specify an entry for the field `Username` as it is automatically generated and formatted."""
+        """
+        Allows the superuser to manually `CREATE` a user. 
+        There is no need to specify an entry for the field `Username` as it is automatically generated and formatted.
+        """
         if request.method == 'POST':
             # Assuming you have a JSON request data with a "password" and "role" field
             password = request.data.get('password')
@@ -85,86 +111,45 @@ class AccountViewSet(ModelViewSet):
             )
 
 
-class UserProfileListView(generics.ListAPIView):
-    """A view that lists ALL the User Profiles"""
-    queryset = UserProfile.objects.all()
-    serializer_class = UserProfileSerializer
+class HeadProfileDetail(generics.RetrieveUpdateAPIView, IsLinkedUser):
+    """
+    Retrieves the profile of a specific Head Officer.
+    """
 
-
-"""
-!!! DEPRECATED !!!
-
-class UserProfileDetailView(generics.RetrieveUpdateAPIView):
-    queryset = UserProfile.objects.all()
-    serializer_class = UserProfileSerializer
-    lookup_field = 'user__username'
-
-    def get_object(self):
-        username = self.kwargs.get('username')
-        return get_object_or_404(UserProfile, user__username=username)
-"""
-
-
-class HeadProfileViewSet(generics.ListAPIView):
-    """Retrieves all the profiles of users who has the role `HEAD`."""
-    queryset = HeadProfile.objects.all()
-    serializer_class = HeadProfileSerializer
-
-    def get_queryset(self):
-        # Filter the queryset to only include profiles associated with Head Officers
-        return HeadProfile.objects.filter(user__role=CustomUser.Role.HEAD)
-
-
-class OfficerProfileViewSet(generics.ListAPIView):
-    """Retrieves all the profiles of users who has the role `OFFICER`."""
-    queryset = OfficerProfile.objects.all()
-    serializer_class = OfficerProfileSerializer
-
-    def get_queryset(self):
-        # Filter the queryset to only include profiles associated with Officers
-        return OfficerProfile.objects.filter(user__role=CustomUser.Role.OFFICER)
-
-
-class ScholarProfileViewSet(generics.ListAPIView):
-    """Retrieves all the profiles of users who has the role `SCHOLAR`."""
-    queryset = ScholarProfile.objects.all()
-    serializer_class = ScholarProfileSerializer
-
-    def get_queryset(self):
-        # Filter the queryset to only include profiles associated with Scholars
-        return ScholarProfile.objects.filter(user__role=CustomUser.Role.SCHOLAR)
-
-
-class HeadProfileDetailView(generics.RetrieveUpdateAPIView):
-    """Retrieves the profile of a specific Head Officer."""
+    permission_classes = [IsLinkedUser, IsAdminUser | IsHeadOfficer]
     queryset = HeadProfile.objects.all()
     serializer_class = HeadProfileSerializer
     lookup_field = 'user__username'
-    #permission_classes = [IsAuthenticated]
 
     def get_object(self):
         username = self.kwargs.get('username')
         return get_object_or_404(HeadProfile, user__username=username)
     
 
-class OfficerProfileDetailView(generics.RetrieveUpdateAPIView):
-    """Retrieves the profile of a specific Head Officer."""
+class OfficerProfileDetail(AllowPUTAsCreateMixin, generics.RetrieveUpdateAPIView, IsLinkedUser, IsAdminOfficer, IsHeadOfficer):
+    """
+    Retrieves the profile of a specific Officer.
+    """
+
+    permission_classes = [IsLinkedUser, IsAdminUser | IsHeadOfficer]
     queryset = OfficerProfile.objects.all()
     serializer_class = OfficerProfileSerializer
     lookup_field = 'user__username'
-    #permission_classes = [IsAuthenticated]
 
     def get_object(self):
         username = self.kwargs.get('username')
         return get_object_or_404(OfficerProfile, user__username=username)
     
 
-class ScholarProfileDetailView(generics.RetrieveUpdateAPIView):
-    """Retrieves the profile of a specific Head Officer."""
+class ScholarProfileDetail(generics.RetrieveUpdateAPIView, IsLinkedUser):
+    """
+    Retrieves the profile of a specific Scholar.
+    """
+
+    permission_classes = [IsLinkedUser]
     queryset = ScholarProfile.objects.all()
     serializer_class = ScholarProfileSerializer
     lookup_field = 'user__username'
-    #permission_classes = [IsAuthenticated]
 
     def get_object(self):
         username = self.kwargs.get('username')
@@ -172,17 +157,29 @@ class ScholarProfileDetailView(generics.RetrieveUpdateAPIView):
 
 
 class AccountDetailView(generics.RetrieveUpdateAPIView):
+    """
+    Retrieves the necessary details of the account.
+    """
+
+    permission_classes = [IsSelfOrAdminUser]
     queryset = CustomUser.objects.all()
     serializer_class = AccountDetailSerializer
     lookup_field = 'username'
-    #permission_classes = [IsAuthenticated]
 
+    """
+    def get_object(self):
+        return self.request.user  # Get the currently logged-in user's account"""
+
+    
     def get_object(self):
         username = self.kwargs.get('username')
         return get_object_or_404(CustomUser, username=username)
     
     def update_user(self, request):
-        """Allows the superuser `VIEW` to manually `UPDATE` a user instance. There is no need to specify an entry for the field `Username` as it is automatically generated and formatted."""
+        """
+        Allows the superuser `VIEW` to manually `UPDATE` a user instance. 
+        There is no need to specify an entry for the field `Username` as it is automatically generated and formatted.
+        """
         user = self.get_object()
 
         # Get the new password from the request

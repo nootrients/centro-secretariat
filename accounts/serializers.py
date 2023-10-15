@@ -37,11 +37,13 @@ class AccountSerializer(serializers.ModelSerializer):
 class AccountDetailSerializer(serializers.ModelSerializer):
     """Serializer for retrieving account details, excluding the password field."""
 
+    username = serializers.CharField(read_only=True)
     lookup_field = 'username'
 
     class Meta:
         model = CustomUser
         fields = ("id", "username", "email", "date_joined", "is_active")
+        # read_only_fields = ("username", )
 
 
 class HeadSerializer(serializers.ModelSerializer):
@@ -106,7 +108,12 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 
 class HeadProfileSerializer(serializers.ModelSerializer):
-    # Serializer for retrieving the personal information of a Head Officer
+    """
+    Serializer for retrieving the personal information of a Head Officer.
+    """
+
+    user = serializers.CharField(read_only=True)
+    district = serializers.ChoiceField(read_only=True, choices=UserProfile.District)
 
     class Meta:
         model = HeadProfile
@@ -115,6 +122,7 @@ class HeadProfileSerializer(serializers.ModelSerializer):
             "firstname",
             "lastname",
             "middlename",
+            "gender",
             "contactnumber",
             "house_address",
             "barangay",
@@ -122,6 +130,7 @@ class HeadProfileSerializer(serializers.ModelSerializer):
             "birthdate",
             "age"
         )
+        read_only_field = ("user", "district")
 
     age = serializers.SerializerMethodField()
 
@@ -129,7 +138,12 @@ class HeadProfileSerializer(serializers.ModelSerializer):
         return obj.calculate_age()
 
 class OfficerProfileSerializer(serializers.ModelSerializer):
-    # Serializer for retrieving the personal information of a Head Officer
+    """
+    Serializer for retrieving the personal information of an Officer.
+    """
+
+    #user = serializers.CharField(read_only=True)
+    district = serializers.ChoiceField(read_only=True, choices=UserProfile.District)
 
     class Meta:
         model = OfficerProfile
@@ -138,12 +152,20 @@ class OfficerProfileSerializer(serializers.ModelSerializer):
             "firstname",
             "lastname",
             "middlename",
+            "gender",
             "contactnumber",
             "house_address",
             "barangay",
             "district",
-            "birthdate"
+            "birthdate",
+            "age"
         )
+        read_only_field = ("user", "district")
+
+    age = serializers.SerializerMethodField()
+
+    def get_age(self, obj):
+        return obj.calculate_age()
 
 
 class ScholarProfileSerializer(serializers.ModelSerializer):
@@ -152,21 +174,28 @@ class ScholarProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = ScholarProfile
         fields = (
-            "user",
+            #"user",
             "firstname",
             "lastname",
             "middlename",
+            "gender",
             "contactnumber",
             "house_address",
             "barangay",
             "district",
             "birthdate",
+            "age",
             "religion",
             "facebook_link",
             "years_of_residency",
             "scholarship_type"
         )
+        read_only_field = ("user", "district")
 
+    age = serializers.SerializerMethodField()
+
+    def get_age(self, obj):
+        return obj.calculate_age()
 
 #Authentication Section
 

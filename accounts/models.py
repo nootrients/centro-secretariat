@@ -123,6 +123,47 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
 
 class UserProfile(models.Model):
+    """
+    Model that would serve as the storage of personal information for the registered users in the system.
+    """
+    class Barangay(models.TextChoices):
+        """
+        DISTRICT 1
+        """
+        BAGUMBAYAN = "BAGUMBAYAN", "Bagumbayan"
+        BAMBANG = "BAMBANG", "Bambang"
+        CALZADA = "CALZADA", "Calzada"
+        HAGONOY = "HAGONOY", "Hagonoy"
+        IBAYO_TIPAS = "IBAYO TIPAS", "Ibayo Tipas"
+        LIGID_TIPAS = "LIGID TIPAS", "Ligid Tipas"
+        LOWER_BICUTAN = "LOWER BICUTAN", "Lower Bicutan"
+        NEW_LOWER_BICUTAN = "NEW LOWER BICUTAN", "New Lower Bicutan"
+        NAPINDAN = "NAPINDAN", "Napindan"
+        PALINGON = "PALINGON", "Palingon"
+        SAN_MIGUEL = "SAN MIGUEL", "San Miguel"
+        SANTA_ANA = "SANTA ANA", "Santa Ana"
+        TUKTUKAN = "TUKTUKAN", "Tuktukan"
+        USUSAN = "USUSAN", "Ususan"
+        WAWA = "WAWA", "Wawa"
+
+
+        """
+        DISTRICT 2
+        """
+        BAGONG_TANYAG = "BAGONG TANYAG", "Bagong Tanyag"
+        CENTRAL_BICUTAN = "CENTRAL BICUTAN", "Central Bicutan"
+        CENTRAL_SIGNAL_VILLAGE = "CENTRAL SIGNAL VILLAGE", "Central Signal Village"
+        FORT_BONIFACIO = "FORT BONIFACIO", "Fort Bonifacio"
+        KATUPARAN = "KATUPARAN", "Katuparan"
+        MAHARLIKA_VILLAGE = "MAHARLIKA VILLAGE", "Maharlika Village"
+        NORTH_DAANG_HARI = "NORTH DAANG_HARI", "North Daang Hari"
+        NORTH_SIGNAL_VILLAGE = "NORTH SIGNAL VILLAGE", "North Signal Village"
+        PINAGSAMA = "PINAGSAMA", "Pinagsama"
+        SOUTH_DAANG_HARI = "SOUTH DAANG HARI", "South Daang Hari"
+        SOUTH_SIGNAL_VILLAGE = "SOUTH SIGNAL VILLAGE", "South Signal Village"
+        UPPER_BICUTAN = "UPPER BICUTAN", "Upper Bicutan"
+        WESTERN_BICUTAN = "WESTERN BICUTAN", "Western Bicutan"
+
     class District(models.TextChoices):
         ONE = "ONE", "1"
         TWO = "TWO", "2"
@@ -138,7 +179,7 @@ class UserProfile(models.Model):
     contactnumber = models.CharField(max_length=13)
     
     house_address = models.CharField(max_length=50)
-    barangay = models.CharField(max_length=30)
+    barangay = models.CharField(max_length=50, null=True, choices=Barangay.choices)
     district = models.CharField(max_length=3, null=True, choices=District.choices)
 
     birthdate = models.DateField(null=True, blank=False)
@@ -151,7 +192,43 @@ class UserProfile(models.Model):
             - ((today.month, today.day) < (self.birthdate.month, self.birthdate.day))
         )
         return age
+    
+    def save(self, *args, **kwargs):
+        # Automatically set the District based on the selected Barangay
+        district_mapping = {
+            UserProfile.District.ONE: UserProfile.Barangay.BAGUMBAYAN,
+            UserProfile.Barangay.BAMBANG: UserProfile.District.ONE,
+            UserProfile.Barangay.CALZADA: UserProfile.District.ONE,
+            UserProfile.Barangay.HAGONOY: UserProfile.District.ONE,
+            UserProfile.Barangay.IBAYO_TIPAS: UserProfile.District.ONE,
+            UserProfile.Barangay.LIGID_TIPAS: UserProfile.District.ONE,
+            UserProfile.Barangay.LOWER_BICUTAN: UserProfile.District.ONE,
+            UserProfile.Barangay.NEW_LOWER_BICUTAN: UserProfile.District.ONE,
+            UserProfile.Barangay.NAPINDAN: UserProfile.District.ONE,
+            UserProfile.Barangay.PALINGON: UserProfile.District.ONE,
+            UserProfile.Barangay.SAN_MIGUEL: UserProfile.District.ONE,
+            UserProfile.Barangay.SANTA_ANA: UserProfile.District.ONE,
+            UserProfile.Barangay.TUKTUKAN: UserProfile.District.ONE,
+            UserProfile.Barangay.USUSAN: UserProfile.District.ONE,
+            UserProfile.Barangay.WAWA: UserProfile.District.ONE,
 
+            UserProfile.Barangay.BAGONG_TANYAG: UserProfile.District.TWO,
+            UserProfile.Barangay.CENTRAL_BICUTAN: UserProfile.District.TWO,
+            UserProfile.Barangay.CENTRAL_SIGNAL_VILLAGE: UserProfile.District.TWO,
+            UserProfile.Barangay.FORT_BONIFACIO: UserProfile.District.TWO,
+            UserProfile.Barangay.KATUPARAN: UserProfile.District.TWO,
+            UserProfile.Barangay.MAHARLIKA_VILLAGE: UserProfile.District.TWO,
+            UserProfile.Barangay.NORTH_DAANG_HARI: UserProfile.District.TWO,
+            UserProfile.Barangay.NORTH_SIGNAL_VILLAGE: UserProfile.District.TWO,
+            UserProfile.Barangay.PINAGSAMA: UserProfile.District.TWO,
+            UserProfile.Barangay.SOUTH_DAANG_HARI: UserProfile.District.TWO,
+            UserProfile.Barangay.SOUTH_SIGNAL_VILLAGE: UserProfile.District.TWO,
+            UserProfile.Barangay.UPPER_BICUTAN: UserProfile.District.TWO,
+            UserProfile.Barangay.WESTERN_BICUTAN: UserProfile.District.TWO,
+        }
+
+        self.district = district_mapping.get(self.barangay, self.district)
+        super().save(*args, **kwargs)
 
 
 """
