@@ -26,7 +26,7 @@ class CustomUserAdmin(BaseUserAdmin):
                                        'groups', 'user_permissions')}),
         (('Important dates'), {'fields': ('last_login', 'date_joined')}),
     )
-    list_display = ('username', 'email', 'is_staff', 'role')
+    list_display = ('username', 'id', 'email', 'is_staff', 'role')
     search_fields = ('email', 'username')
     ordering = ('username', )
 

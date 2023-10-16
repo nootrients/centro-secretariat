@@ -5,10 +5,12 @@ from django.shortcuts import get_object_or_404
 
 from django.contrib.auth.hashers import make_password
 
+from django.contrib.auth.models import Group
+
 from accounts.models import CustomUser, Head, Officer, Scholar
 from accounts.models import HeadProfile, OfficerProfile, ScholarProfile
 
-from accounts.serializers import AccountSerializer, AccountDetailSerializer, HeadSerializer, OfficerSerializer, ScholarSerializer
+from accounts.serializers import AccountSerializer, AccountDetailSerializer, HeadSerializer, OfficerSerializer, ScholarSerializer, RegisterUserSerializer
 from accounts.serializers import HeadProfileSerializer, OfficerProfileSerializer, ScholarProfileSerializer
 
 from accounts.permissions import IsLinkedUser, IsHeadOfficer, IsAdminOfficer, IsSelfOrAdminUser
@@ -17,6 +19,7 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.views import APIView
 from rest_framework import generics
 
 from rest_framework.permissions import IsAdminUser, DjangoModelPermissions
@@ -53,10 +56,10 @@ class ScholarList(generics.ListAPIView):
     serializer_class = ScholarSerializer
 
 
-class AccountViewSet(ModelViewSet):
+class AccountList(generics.ListAPIView):
     """
-    Retrieves all the currently registered users regardless of their roles (Head, Officers, Scholars). 
-    Also allows the superuser to `CREATE`, `READ`, `UPDATE`, and `DELETE`.
+    Retrieves all the currently registered users regardless of their roles (`HEAD`, `OFFICER`, `SCHOLAR`).
+    Only the superuser shall be able to see the list.
     """
 
     permission_classes=[IsAdminUser]
@@ -65,6 +68,7 @@ class AccountViewSet(ModelViewSet):
     
     lookup_field = 'username'
 
+    
     def get_object(self):
         queryset = self.filter_queryset(self.get_queryset())
         filter_kwargs = {self.lookup_field: self.kwargs['username']}
@@ -73,12 +77,13 @@ class AccountViewSet(ModelViewSet):
 
         return obj
     
+    """
     @action(detail=False, methods=['POST'])
     def create_user(self, request):
-        """
-        Allows the superuser to manually `CREATE` a user. 
-        There is no need to specify an entry for the field `Username` as it is automatically generated and formatted.
-        """
+        
+        #Allows the superuser to manually `CREATE` a user. 
+        #There is no need to specify an entry for the field `Username` as it is automatically generated and formatted.
+        
         if request.method == 'POST':
             # Assuming you have a JSON request data with a "password" and "role" field
             password = request.data.get('password')
@@ -109,9 +114,31 @@ class AccountViewSet(ModelViewSet):
                 {'detail': 'Please provide a role parameter in the request'},
                 status=status.HTTP_400_BAD_REQUEST
             )
+    """
+            
+
+class CreateOfficer(generics.CreateAPIView):
+    """
+    A view that enables the Administrator to create an `OFFICER` account.
+    """
+
+    permission_classes = [IsAdminUser]
+    serializer_class = RegisterUserSerializer
+
+    def post(self, request):
+        reg_serializer = RegisterUserSerializer(data=request.data)
+
+        if reg_serializer.is_valid():
+            reg_serializer.validated_data['role'] = 'OFFICER'
+            newuser = reg_serializer.save()
+
+            if newuser:
+                return Response(status=status.HTTP_201_CREATED)
+        
+        return Response(reg_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class HeadProfileDetail(generics.RetrieveUpdateAPIView, IsLinkedUser):
+class HeadProfileDetail(AllowPUTAsCreateMixin, generics.RetrieveUpdateAPIView, IsLinkedUser):
     """
     Retrieves the profile of a specific Head Officer.
     """

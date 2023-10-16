@@ -30,7 +30,7 @@ class IsSelfOrAdminUser(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         # Check if the user is a superuser or is trying to access their own account
-        return request.user.is_superuser or obj == request.user
+        return request.user.is_superuser or request.user.role == "ADMIN" or obj == request.user
     
 
 class IsLinkedUser(BasePermission):
