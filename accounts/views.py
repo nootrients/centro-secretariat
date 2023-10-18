@@ -8,10 +8,10 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import Group
 
 from accounts.models import CustomUser, Head, Officer, Scholar
-from accounts.models import HeadProfile, OfficerProfile, ScholarProfile
+from accounts.models import UserProfile, HeadProfile, OfficerProfile, ScholarProfile
 
 from accounts.serializers import AccountSerializer, AccountDetailSerializer, HeadSerializer, OfficerSerializer, ScholarSerializer, RegisterUserSerializer
-from accounts.serializers import HeadProfileSerializer, OfficerProfileSerializer, ScholarProfileSerializer
+from accounts.serializers import UserProfileSerializer, HeadProfileSerializer, OfficerProfileSerializer, ScholarProfileSerializer
 
 from accounts.permissions import IsLinkedUser, IsHeadOfficer, IsAdminOfficer, IsSelfOrAdminUser
 
@@ -24,6 +24,26 @@ from rest_framework import generics
 
 from rest_framework.permissions import IsAdminUser, DjangoModelPermissions
 
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
+
+
+
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+
+        # Add custom claims
+        token['username'] = user.username
+        token['role'] = user.role
+        token['isActive'] = user.is_active # new | Add is_active to payload for verifying if the user trying to log in is an active user or not
+
+        return token
+    
+
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = MyTokenObtainPairSerializer
 
 
 class HeadList(generics.ListAPIView):
@@ -62,7 +82,7 @@ class AccountList(generics.ListAPIView):
     Only the superuser shall be able to see the list.
     """
 
-    permission_classes=[IsAdminUser]
+    permission_classes=[IsAdminUser | IsHeadOfficer]
     queryset = CustomUser.objects.all()
     serializer_class = AccountSerializer
     
@@ -138,6 +158,16 @@ class CreateOfficer(generics.CreateAPIView):
         return Response(reg_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class UserProfileDetail(generics.RetrieveUpdateAPIView):
+
+    permission_classes = [IsLinkedUser]
+    serializer_class = UserProfileSerializer
+
+    def get_object(self):
+        # Get the user profile of the currently logged-in user
+        return self.request.user.profile
+
+
 class HeadProfileDetail(AllowPUTAsCreateMixin, generics.RetrieveUpdateAPIView, IsLinkedUser):
     """
     Retrieves the profile of a specific Head Officer.
@@ -188,7 +218,7 @@ class AccountDetailView(generics.RetrieveUpdateAPIView):
     Retrieves the necessary details of the account.
     """
 
-    permission_classes = [IsSelfOrAdminUser]
+    permission_classes = [IsSelfOrAdminUser, IsAdminUser]
     queryset = CustomUser.objects.all()
     serializer_class = AccountDetailSerializer
     lookup_field = 'username'

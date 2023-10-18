@@ -1,4 +1,5 @@
 from django.http import HttpResponse
+from django.shortcuts import render
 
 
 # Create your views here.
@@ -27,14 +28,6 @@ def application_index(request):
 def policy_procedure(request):
     return HttpResponse(
         '<div style="text-align:center"><h1>Policy Procedure Page</h1></div>'
-    )
-
-
-# [Client] Form Completion
-def submit_application(request):
-    # Call Application Form
-    return HttpResponse(
-        '<div style="text-align:center"><h1>Scholarship Application Submission Form</h1></div>'
     )
 
 

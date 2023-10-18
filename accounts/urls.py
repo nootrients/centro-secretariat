@@ -20,7 +20,13 @@ urlpatterns = [
     path('', views.login, name="login"),
     # path('users/<str:username>/profile/', views.UserProfileDetailView.as_view(), name='user_profile'),
 
+<<<<<<< HEAD
     path('users/', views.AccountList.as_view() , name='list_all_registered_accounts'),
+=======
+    path('profile/', views.UserProfileDetail.as_view()),
+    
+    path('users/', views.AccountList.as_view(), name='list_all_registered_accounts'),
+>>>>>>> 90837fa979b74916913df2d5ce826d789cadf601
 
     path('users/head_officers/', views.HeadList.as_view(), name='list_all_head_officers'),
     path('users/head_officers/<str:username>/', views.AccountDetailView.as_view(), name='head_officer_account_information'),
