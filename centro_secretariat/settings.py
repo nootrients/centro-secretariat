@@ -48,7 +48,6 @@ INSTALLED_APPS = [
     "demographics",
     "accounts",
     "application",
-    "application",
     "head",
 ]
 
@@ -204,6 +203,6 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
 }
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media') # new
 
 MEDIA_URL = '/media/' # new
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media') # new

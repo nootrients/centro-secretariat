@@ -20,7 +20,7 @@ class ScholarshipType(models.Model):
 
     def __str__(self):
         return f"{self.scholarship_name}"
-
+  
 
 """
 class Applicant(models.Model):
