@@ -37,6 +37,7 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         # Add custom claims
         token['username'] = user.username
         token['role'] = user.role
+        token['isActive'] = user.is_active # new | Add is_active to payload for verifying if the user trying to log in is an active user or not
 
         return token
     
@@ -81,7 +82,7 @@ class AccountList(generics.ListAPIView):
     Only the superuser shall be able to see the list.
     """
 
-    permission_classes=[IsAdminUser]
+    permission_classes=[IsAdminUser | IsHeadOfficer]
     queryset = CustomUser.objects.all()
     serializer_class = AccountSerializer
     
@@ -157,7 +158,7 @@ class CreateOfficer(generics.CreateAPIView):
         return Response(reg_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UserProfileDetail(generics.RetrieveUpdateAPIView, IsLinkedUser):
+class UserProfileDetail(generics.RetrieveUpdateAPIView):
 
     permission_classes = [IsLinkedUser]
     serializer_class = UserProfileSerializer

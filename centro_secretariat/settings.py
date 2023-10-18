@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -40,13 +41,14 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # third party
     "rest_framework",
-    "rest_framework_simplejwt",
+    'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     # local
     "index",
     "demographics",
     "accounts",
+    "application",
     "head",
 ]
 
@@ -71,7 +73,7 @@ ROOT_URLCONF = "centro_secretariat.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": ['centro_secretariat/templates'], # new
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -199,3 +201,7 @@ SIMPLE_JWT = {
 }
 
 CORS_ALLOW_ALL_ORIGINS = True
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media') # new
+
+MEDIA_URL = '/media/' # new
