@@ -16,7 +16,7 @@ class AcademicYearField(models.CharField):
 
     def calculate_academic_year(self):
         today = date.today()
-        current_year = today.year()
+        current_year = today.year
         next_year = current_year + 1
 
         return f"{current_year}-{next_year}" 
@@ -38,10 +38,22 @@ class Applications(models.Model):
         SECOND_SEMESTER = "SECOND SEMESTER", "Second Semester"
 
     application_uuid = models.UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
-    scholarship_type = models.CharField(max_length=20, null=False, choices=ScholarshipType)
+    
+    scholarship_type = models.CharField(
+        max_length=20,
+        null = False,
+        choices=ScholarshipType.choices, 
+        default=ScholarshipType.BASIC
+    )
 
     academic_year = AcademicYearField()
-    semester = models.CharField(max_length=20, null=False, choices=Semester)
+    
+    semester = models.CharField(
+        max_length=20,  
+        null = False,
+        choices=Semester.choices,
+        default=Semester.FIRST_SEMESTER
+    )
 
     gwa = models.PositiveSmallIntegerField(null=True, blank=True)
     is_applying_for_merit = models.BooleanField(null=False, default=False)

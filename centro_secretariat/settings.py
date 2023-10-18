@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 import os
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -42,12 +43,13 @@ INSTALLED_APPS = [
     # third party
     "rest_framework",
     'rest_framework_simplejwt',
-    'rest_framework_simplejwt.token_blacklist',
+    'rest_framework_simplejwt',
     'corsheaders',
     # local
     "index",
     "demographics",
     "accounts",
+    "application",
     "application",
     "head",
 ]
@@ -55,6 +57,10 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+
+    # third party
+    'corsheaders.middleware.CorsMiddleware',
+
 
     # third party
     'corsheaders.middleware.CorsMiddleware',
@@ -73,6 +79,7 @@ ROOT_URLCONF = "centro_secretariat.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": ['centro_secretariat/templates'], # new
         "DIRS": ['centro_secretariat/templates'], # new
         "APP_DIRS": True,
         "OPTIONS": {
