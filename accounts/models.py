@@ -176,11 +176,11 @@ class UserProfile(models.Model):
 
     gender = models.ForeignKey(Gender, on_delete=models.CASCADE, default=3)
     
-    contactnumber = models.CharField(max_length=13)
+    contactnumber = models.CharField(max_length=11)
     
     house_address = models.CharField(max_length=50)
     barangay = models.CharField(max_length=50, null=True, choices=Barangay.choices)
-    district = models.CharField(max_length=3, null=True, choices=District.choices)
+    district = models.CharField(max_length=3, null=True, choices=District.choices, editable=False)
 
     birthdate = models.DateField(null=True, blank=False)
 
@@ -196,7 +196,7 @@ class UserProfile(models.Model):
     def save(self, *args, **kwargs):
         # Automatically set the District based on the selected Barangay
         district_mapping = {
-            UserProfile.District.ONE: UserProfile.Barangay.BAGUMBAYAN,
+            UserProfile.Barangay.BAGUMBAYAN: UserProfile.District.ONE,
             UserProfile.Barangay.BAMBANG: UserProfile.District.ONE,
             UserProfile.Barangay.CALZADA: UserProfile.District.ONE,
             UserProfile.Barangay.HAGONOY: UserProfile.District.ONE,
@@ -282,6 +282,10 @@ class ScholarProfile(UserProfile):
     facebook_link = models.CharField(max_length=100, blank=True)
     years_of_residency = models.PositiveSmallIntegerField(null=False, default=6)
     scholarship_type = models.ForeignKey(ScholarshipType, on_delete=models.CASCADE, null=False, default=5)
+
+    # Determine if the applicant has already graduated
+    is_graduated = models.BooleanField(null=False, default=False)                                        
+    is_archived = models.BooleanField(null=False, default=False)
     
     def __str__(self):
         return f"{self.user.username}'s Profile"

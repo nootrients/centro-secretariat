@@ -198,7 +198,7 @@ class OfficerProfileDetail(AllowPUTAsCreateMixin, generics.RetrieveUpdateAPIView
         return get_object_or_404(OfficerProfile, user__username=username)
     
 
-class ScholarProfileDetail(generics.RetrieveUpdateAPIView, IsLinkedUser):
+class ScholarProfileDetail(generics.RetrieveAPIView, IsLinkedUser):
     """
     Retrieves the profile of a specific Scholar.
     """
@@ -218,7 +218,7 @@ class AccountDetailView(generics.RetrieveUpdateAPIView):
     Retrieves the necessary details of the account.
     """
 
-    permission_classes = [IsSelfOrAdminUser, IsAdminUser]
+    permission_classes = [IsSelfOrAdminUser, IsAdminUser | IsHeadOfficer]
     queryset = CustomUser.objects.all()
     serializer_class = AccountDetailSerializer
     lookup_field = 'username'

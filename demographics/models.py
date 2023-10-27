@@ -10,7 +10,7 @@ class Gender(models.Model):
     gender_name = models.CharField(max_length=30)
 
     def __str__(self):
-        return f"{self.id} {self.gender_name}"
+        return f"{self.gender_name}"
 
 
 class ScholarshipType(models.Model):

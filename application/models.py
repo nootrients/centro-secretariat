@@ -1,6 +1,7 @@
 from django.db import models
 
 from accounts.models import Officer
+from demographics.models import Gender
 
 from datetime import date
 import uuid
@@ -22,7 +23,63 @@ class AcademicYearField(models.CharField):
         return f"{current_year}-{next_year}" 
 
 
+class PartneredUniversities(models.Model):
+    university_name = models.CharField(max_length=100, null=False, blank=False)
+
+    def __str__(self):
+        return self.university_name
+
+
+class Courses(models.Model):
+    course_name = models.CharField(max_length=50, null=False, blank=False)
+
+    def __str__(self):
+        return self.course_name
+
+
 class Applications(models.Model):
+    class Barangay(models.TextChoices):
+        """
+        DISTRICT 1
+        """
+        BAGUMBAYAN = "BAGUMBAYAN", "Bagumbayan"
+        BAMBANG = "BAMBANG", "Bambang"
+        CALZADA = "CALZADA", "Calzada"
+        HAGONOY = "HAGONOY", "Hagonoy"
+        IBAYO_TIPAS = "IBAYO TIPAS", "Ibayo Tipas"
+        LIGID_TIPAS = "LIGID TIPAS", "Ligid Tipas"
+        LOWER_BICUTAN = "LOWER BICUTAN", "Lower Bicutan"
+        NEW_LOWER_BICUTAN = "NEW LOWER BICUTAN", "New Lower Bicutan"
+        NAPINDAN = "NAPINDAN", "Napindan"
+        PALINGON = "PALINGON", "Palingon"
+        SAN_MIGUEL = "SAN MIGUEL", "San Miguel"
+        SANTA_ANA = "SANTA ANA", "Santa Ana"
+        TUKTUKAN = "TUKTUKAN", "Tuktukan"
+        USUSAN = "USUSAN", "Ususan"
+        WAWA = "WAWA", "Wawa"
+
+
+        """
+        DISTRICT 2
+        """
+        BAGONG_TANYAG = "BAGONG TANYAG", "Bagong Tanyag"
+        CENTRAL_BICUTAN = "CENTRAL BICUTAN", "Central Bicutan"
+        CENTRAL_SIGNAL_VILLAGE = "CENTRAL SIGNAL VILLAGE", "Central Signal Village"
+        FORT_BONIFACIO = "FORT BONIFACIO", "Fort Bonifacio"
+        KATUPARAN = "KATUPARAN", "Katuparan"
+        MAHARLIKA_VILLAGE = "MAHARLIKA VILLAGE", "Maharlika Village"
+        NORTH_DAANG_HARI = "NORTH DAANG_HARI", "North Daang Hari"
+        NORTH_SIGNAL_VILLAGE = "NORTH SIGNAL VILLAGE", "North Signal Village"
+        PINAGSAMA = "PINAGSAMA", "Pinagsama"
+        SOUTH_DAANG_HARI = "SOUTH DAANG HARI", "South Daang Hari"
+        SOUTH_SIGNAL_VILLAGE = "SOUTH SIGNAL VILLAGE", "South Signal Village"
+        UPPER_BICUTAN = "UPPER BICUTAN", "Upper Bicutan"
+        WESTERN_BICUTAN = "WESTERN BICUTAN", "Western Bicutan"
+
+    class District(models.TextChoices):
+        ONE = "ONE", "1"
+        TWO = "TWO", "2"
+
     class Religion(models.TextChoices):
         ROMAN_CATHOLIC = "ROMAN CATHOLIC", "ROMAN CATHOLIC"
         PROTESTANT = "PROTESTANT", "PROTESTANT"
@@ -63,6 +120,17 @@ class Applications(models.Model):
         THREE_YEARS = "THREE YEARS", "THREE (3) YEARS"
         FOUR_YEARS = "FOUR YEARS", "FOUR (4) YEARS"
         FIVE_YEARS = "FIVE YEARS", "FIVE (5) YEARS"
+
+
+    class SchoolType(models.TextChoices):
+        PRIVATE = "PRIVATE", "PRIVATE"
+        PUBLIC = "PUBLIC", "PUBLIC"
+
+
+    class StudentStatus(models.TextChoices):
+        REGULAR = "REGULAR", "REGULAR"
+        IRREGULAR = "IRREGULAR", "IRREGULAR"
+        OCTOBERIAN = "OCTOBERIAN", "OCTOBERIAN"
     
 
     application_uuid = models.UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
@@ -71,59 +139,112 @@ class Applications(models.Model):
     """
     PERSONAL INFORMATION SECTION
     """
-    national_id = models.ImageField(upload_to='uploads/images',null=False,blank=False)
+    national_id = models.ImageField(upload_to='applicant/ids', null=True, blank=False)
     
     # These fields are not editable
-    firstname = models.CharField(max_length=30, null=False, blank=False)           # Auto generated from the scanned National ID
-    lastname = models.CharField(max_length=30, null=False, blank=False)            # Auto generated from the scanned National ID
-    middlename = models.CharField(max_length=30, null=False, blank=False)          # Auto generated from the scanned National ID
+    firstname = models.CharField(max_length=30, null=True, blank=False)           # Auto generated from the scanned National ID
+    lastname = models.CharField(max_length=30, null=True, blank=False)            # Auto generated from the scanned National ID
+    middlename = models.CharField(max_length=30, null=True, blank=False)          # Auto generated from the scanned National ID
     
-    gender = models.CharField(null=False, )                                        # Auto generated from the scanned National ID
+    gender = models.ForeignKey(Gender, on_delete=models.CASCADE, null=True, blank=False)                                        
 
-    birthdate = models.DateField(null=True, blank=False)                           # Auto generated from the scanned National ID (?????)
+    birthdate = models.DateField(null=True, blank=False)                          # Auto generated from the scanned National ID
     
-    house_address = models.CharField(max_length=50)
-    # barangay = models.CharField(max_length=50, null=True, choices=Barangay.choices)           # Possible duplicate value on UserProfile model
-    # district = models.CharField(max_length=3, null=True, choices=District.choices)            # Possible duplicate value on UserProfile model
+    house_address = models.CharField(max_length=50, null=True, blank=False)
+    barangay = models.CharField(max_length=50, null=True, choices=Barangay.choices)           # Possible duplicate value on UserProfile model
+    district = models.CharField(max_length=3, null=True, choices=District.choices)            # Editable = False || Auto-fill based on Barangay's value
     
-    email_address = models.EmailField(unique=True, blank=False)
-    personalized_facebook_link = models.CharField(max_length=30, null=False, blank=False)
+    email_address = models.EmailField(unique=True, null=True, blank=False)
+    personalized_facebook_link = models.CharField(max_length=30, null=True, blank=False)
 
-    religion = models.CharField(max_length=30, choices=Religion.choices,null=False, blank=False)
+    religion = models.CharField(max_length=30, choices=Religion.choices, null=True, blank=False)
+
 
     """
     APPLICATION VALIDATION SECTION
     """
-    applicant_status = models.CharField(max_length=18, choices=ApplicantStatus.choices, null=False, blank=False)
-    scholarship_type = models.CharField(max_length=20, choices=ScholarshipType.choices, null = False, default=ScholarshipType.BASIC_SCHOLARSHIP, blank=False)
+    applicant_status = models.CharField(max_length=18, choices=ApplicantStatus.choices, null=True, default=ApplicantStatus.NEW_APPLICANT, blank=False)
+    scholarship_type = models.CharField(max_length=20, choices=ScholarshipType.choices, null=True, default=ScholarshipType.BASIC_SCHOLARSHIP, blank=False)
     
     academic_year = AcademicYearField()
-    semester = models.CharField(max_length=20, null=False, choices=Semester.choices, default=Semester.FIRST_SEMESTER, blank=False)
+    semester = models.CharField(max_length=20, null=True, choices=Semester.choices, default=Semester.FIRST_SEMESTER, blank=False)
 
-    informative_copy_of_grades = models.FileField(upload_to='uploads/pdfs', null=False, blank=False)
+    informative_copy_of_grades = models.FileField(upload_to='applicant/icg', null=True, blank=False)
     is_applying_for_merit = models.BooleanField(null=False, default=False, blank=False)                 # (SWA at least 1.75 equivalent to 88.75%) || Get Informative Copy of Grades > 
     
-    years_of_residency = models.PositiveSmallIntegerField(null=False, blank=False)                      # In Taguig City
+    years_of_residency = models.PositiveSmallIntegerField(null=True, blank=False)                      # In Taguig City
+
+    voter_certificate = models.FileField(upload_to='applicant/voters_certificate', null=True, blank=False)
 
 
     """
     CURRENT EDUCATION SECTION    
     """
-    university_attending = models.CharField(max_length=40, null=False, blank=False)                         # REFERENCE TO ANOTHER TABLE
-    course_taking = models.CharField(max_length=40, null=False, blank=False)                                # REFERENCE TO ANOTHER TABLE
-    year_level = models.CharField(max_length=15, choices=YearLevel.choices, null=False, blank=False)
+    university_attending = models.ForeignKey(PartneredUniversities, on_delete=models.CASCADE, max_length=40, null=True, blank=False)
+    course_taking = models.ForeignKey(Courses, on_delete=models.CASCADE, max_length=50, null=True, blank=False)
+    year_level = models.CharField(max_length=15, choices=YearLevel.choices, null=True, blank=False)
     is_graduating = models.BooleanField(null=False, blank=False, default=False)
-    course_duration = models.CharField(max_length=15, choices=CourseDuration.choices, null=False, blank=False)
-
+    course_duration = models.CharField(max_length=15, choices=CourseDuration.choices, null=True, blank=False)
     
+
     """
     EDUCATIONAL BACKGROUND
     """
-    # CONTINUE
-    # HAVE IT ON ANOTHER MODEL
+    # Elementary
+    elementary_school = models.CharField(max_length=50, null=True, blank=False)
+    elementary_school_type = models.CharField(max_length=10, choices=SchoolType.choices, null=True, blank=False)
+    elementary_school_address = models.TextField(max_length=100, null=True, blank=False)
+    elementary_start_end = models.CharField(max_length=9, null=True, blank=False)
+
+    # Junior HS
+    jhs_school = models.CharField(max_length=50, null=True, blank=False)
+    jhs_school_type = models.CharField(max_length=10, choices=SchoolType.choices, null=True, blank=False)
+    jhs_school_address = models.TextField(max_length=100, null=True, blank=False)
+    jhs_start_end = models.CharField(max_length=9, null=True, blank=False)
     
-    # Fill table on PartneredUniversities
-    # Fill table on Courses
+    # Senior HS
+    shs_school = models.CharField(max_length=50, null=True, blank=False)
+    shs_school_type = models.CharField(max_length=10, choices=SchoolType.choices, null=True, blank=False)
+    shs_school_address = models.TextField(max_length=100, null=True, blank=False)
+    shs_start_end = models.CharField(max_length=9, null=True, blank=False)
+
+
+    """
+    FAMILY BACKGROUND
+    """
+    # Father's Side
+    fathers_complete_name = models.CharField(max_length=50, null=True, blank=False)
+    fathers_complete_address = models.CharField(max_length=70, null=True, blank=False)
+    fathers_contact_number = models.CharField(max_length=11, null=True, blank=False)
+    fathers_occupation = models.CharField(max_length=30, null=True, blank=False)
+    fathers_place_of_work = models.CharField(max_length=30, null=True, blank=False)
+    fathers_educational_attainment = models.CharField(max_length=30, null=True, blank=False)
+
+    # Mother's Side
+    mothers_complete_name = models.CharField(max_length=50, null=True, blank=False)
+    mothers_complete_address = models.CharField(max_length=70, null=True, blank=False)
+    mothers_contact_number = models.CharField(max_length=11, null=True, blank=False)
+    mothers_occupation = models.CharField(max_length=30, null=True, blank=False)
+    mothers_place_of_work = models.CharField(max_length=30, null=True, blank=False)
+    mothers_educational_attainment = models.CharField(max_length=30, null=True, blank=False)
+
+    guardians_voter_certificate = models.FileField(upload_to='guardian/voters_certificate', null=True, blank=False, help_text="Insert one of your guardian's voter certificate (for verification and validation purposes).")
+
+
+    """
+    MISCELLANEOUS INFORMATION    
+    """
+    registration_form = models.FileField(upload_to='applicant/registration_form', null=True, blank=False)
+
+    total_units_enrolled = models.PositiveSmallIntegerField(null=True, blank=False)             # Derive from the uploaded registration form
+    is_ladderized = models.BooleanField(null=True, blank=False)
+    number_of_semesters_before_graduating = models.PositiveSmallIntegerField(null=True, blank=False)
+    
+    transferee = models.CharField(max_length=50, null=True, default='N/A', blank=False, help_text="Name of your previous school/university.")
+    shiftee = models.CharField(max_length=30, null=True, default='N/A', blank=False, help_text="Title of your previous course (if shiftee).")
+
+    student_status = models.CharField(max_length=20, choices=StudentStatus.choices, null=True, blank=False)
+
 
     """
     UTILITIES SECTION
@@ -136,10 +257,7 @@ class Applications(models.Model):
 
     approved_by = models.ForeignKey(Officer, on_delete=models.CASCADE, null=True, blank=True)
 
-    # Transfer to ScholarProfile instead
-    # Determine if the applicant has already graduated
-    is_graduated = models.BooleanField(null=False, default=False)                                        
-    is_archived = models.BooleanField(null=False, default=False)
+    # ADD `STATUS` FOR LOGGING/TRACKING
 
     def calculate_age(self):
         today = date.today()
@@ -150,13 +268,54 @@ class Applications(models.Model):
         )
         return age
 
+    def save(self, *args, **kwargs):
+        # Automatically set the District based on the selected Barangay
+        district_mapping = {
+            Applications.Barangay.BAGUMBAYAN: Applications.District.ONE,
+            Applications.Barangay.BAMBANG: Applications.District.ONE,
+            Applications.Barangay.CALZADA: Applications.District.ONE,
+            Applications.Barangay.HAGONOY: Applications.District.ONE,
+            Applications.Barangay.IBAYO_TIPAS: Applications.District.ONE,
+            Applications.Barangay.LIGID_TIPAS: Applications.District.ONE,
+            Applications.Barangay.LOWER_BICUTAN: Applications.District.ONE,
+            Applications.Barangay.NEW_LOWER_BICUTAN: Applications.District.ONE,
+            Applications.Barangay.NAPINDAN: Applications.District.ONE,
+            Applications.Barangay.PALINGON: Applications.District.ONE,
+            Applications.Barangay.SAN_MIGUEL: Applications.District.ONE,
+            Applications.Barangay.SANTA_ANA: Applications.District.ONE,
+            Applications.Barangay.TUKTUKAN: Applications.District.ONE,
+            Applications.Barangay.USUSAN: Applications.District.ONE,
+            Applications.Barangay.WAWA: Applications.District.ONE,
+
+            Applications.Barangay.BAGONG_TANYAG: Applications.District.TWO,
+            Applications.Barangay.CENTRAL_BICUTAN: Applications.District.TWO,
+            Applications.Barangay.CENTRAL_SIGNAL_VILLAGE: Applications.District.TWO,
+            Applications.Barangay.FORT_BONIFACIO: Applications.District.TWO,
+            Applications.Barangay.KATUPARAN: Applications.District.TWO,
+            Applications.Barangay.MAHARLIKA_VILLAGE: Applications.District.TWO,
+            Applications.Barangay.NORTH_DAANG_HARI: Applications.District.TWO,
+            Applications.Barangay.NORTH_SIGNAL_VILLAGE: Applications.District.TWO,
+            Applications.Barangay.PINAGSAMA: Applications.District.TWO,
+            Applications.Barangay.SOUTH_DAANG_HARI: Applications.District.TWO,
+            Applications.Barangay.SOUTH_SIGNAL_VILLAGE: Applications.District.TWO,
+            Applications.Barangay.UPPER_BICUTAN: Applications.District.TWO,
+            Applications.Barangay.WESTERN_BICUTAN: Applications.District.TWO,
+        }
+
+        self.district = district_mapping.get(self.barangay, self.district)
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return self.application_uuid
+
+
+class EligibilityConfig(models.Model):
+    class Semester(models.TextChoices):
+        FIRST_SEMESTER = "FIRST SEMESTER", "FIRST SEMESTER"
+        SECOND_SEMESTER = "SECOND SEMESTER", "SECOND SEMESTER"
     
-
-class PartneredUniversities(models.Model):
-    university_name = models.CharField(max_length=50, null=False, blank=False)
-
-
-class Courses(models.Model):
-    course_name = models.CharField(max_length=50, null=False, blank=False)
+    academic_year = AcademicYearField()
+    semester = models.CharField(max_length=50, null=False, blank=False, choices=Semester.choices, default=Semester.FIRST_SEMESTER)
+    minimum_residency = models.PositiveSmallIntegerField(null=False, blank=False, default=3)
+    voters_validity_year_start = models.PositiveSmallIntegerField(null=True, blank=False)
+    voters_validity_year_end = models.PositiveSmallIntegerField(null=True, blank=False)

@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "rest_framework",
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
+    'django_filters',
     # local
     "index",
     "demographics",
@@ -68,7 +69,6 @@ ROOT_URLCONF = "centro_secretariat.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": ['centro_secretariat/templates'], # new
         "DIRS": ['centro_secretariat/templates'], # new
         "APP_DIRS": True,
         "OPTIONS": {
@@ -164,12 +164,12 @@ PASSWORD_HASHERS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        #'rest_framework.permissions.IsAuthenticatedOrReadOnly',
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+        #'rest_framework.permissions.AllowAny',
     ],
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    )
+    #'DEFAULT_AUTHENTICATION_CLASSES': (
+    #    'rest_framework_simplejwt.authentication.JWTAuthentication',
+    #)
 }
 
 SIMPLE_JWT = {

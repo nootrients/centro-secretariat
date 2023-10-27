@@ -14,6 +14,7 @@ urlpatterns = [
     
     # For API Viewing
     path('accounts/', include('accounts.urls')),
+    path('applications/', include('application.urls')),
     
     path('api-auth/', include('rest_framework.urls')),
     path('api/token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),

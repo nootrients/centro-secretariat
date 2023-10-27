@@ -100,6 +100,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "birthdate",
             "age"
         )
+        read_only_fields = ['user', 'district']
 
     age = serializers.SerializerMethodField()
 
@@ -215,52 +216,3 @@ class RegisterUserSerializer(serializers.ModelSerializer):
         instance.save()
         
         return instance
-
-
-#Authentication Section
-
-"""
-class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField(
-        label='User ID', 
-        write_only=True
-    )
-    
-    password = serializers.CharField(
-        label='Password',
-        style={'input_type': 'password'},
-        trim_whitespace=False,
-        write_only=True
-    )
-
-    def validate(self, attrs):
-        # Take username and Password from request
-        username = attrs.get('username')
-        password = attrs.get('password')
-
-        if username and password:
-            # Authenticate using Django Auth framework
-            user = authenticate(request=self.context.get('request'), 
-                                username=username, password=password)
-            
-            if user is not None:
-                if user.role == 'Head':
-                    # Head Officer
-                    pass
-                elif user.role == 'Officer':
-                    # Officers
-                    pass
-                elif user.role == 'Scholar':
-                    # Scholars
-                    pass
-            else:
-                msg = 'Access denied: Wrong username or Password.'
-                raise serializers.ValidationError(msg, code='authorization')
-            
-        else:
-            msg = 'Both "Username" and "Password" are required.'
-            raise serializers.ValidationError(msg, code='authorization')
-        
-        attrs['user'] = user
-        return attrs
-"""
