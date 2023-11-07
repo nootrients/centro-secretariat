@@ -9,6 +9,7 @@ urlpatterns = [
     # POST
     # API-endpoint for submitting scholarship application
     path('', views.ApplicationForm.as_view(), name='application-form'),
+    path('review-and-process/', views.ReviewAndProcessView.as_view(), name='review-and-process'),
 
     # GET (only those who passed the Automated Eligibility Checking)
     path('list/', views.EligibleApplicationsList.as_view(), name='view-eligible-applications-list'),
@@ -18,6 +19,6 @@ urlpatterns = [
     path('list/renewing/<uuid:application_uuid>', views.ApplicationDetailView.as_view(), name='view-renewing-applications-detail'),
 
 
-    path('config/', views.EligibilityConfig.as_view(), name='eligibility-config')
+    path('config/<int:pk>/', views.EligibilityConfigView.as_view(), name='eligibility-config')
 
 ]+static(settings.MEDIA_URL, document_route=settings.MEDIA_ROOT)

@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 
@@ -7,6 +8,7 @@ from .models import (CustomUser,
                      Head, 
                      Officer,
                      Scholar,
+                     UserIdCounter
                      )
 
 
@@ -18,8 +20,13 @@ class UserProfileInline(admin.StackedInline):
 
 # admin.site.register(CustomUser)
 @admin.register(CustomUser)
-class CustomUserAdmin(BaseUserAdmin):
+class CustomUserAdmin(UserAdmin):
     readonly_fields = ('date_joined',)
+    
+    add_fieldsets = UserAdmin.add_fieldsets + (
+        (None, {'fields': ('email', 'role')}),
+    )
+    
     fieldsets = (
         (None, {'fields': ('username', 'email', 'password')}),
         (('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser',
@@ -29,6 +36,7 @@ class CustomUserAdmin(BaseUserAdmin):
     list_display = ('username', 'id', 'email', 'is_staff', 'role')
     search_fields = ('email', 'username')
     ordering = ('username', )
+    inlines = (UserProfileInline, )
 
 
 @admin.register(Head)
@@ -49,6 +57,11 @@ class HeadAdmin(BaseUserAdmin):
 @admin.register(Officer)
 class OfficerAdmin(BaseUserAdmin):
     readonly_fields = ('date_joined',)
+    
+    add_fieldsets = BaseUserAdmin.add_fieldsets + (
+        (None, {'fields': ('email', )}),
+    )
+
     fieldsets = (
         (None, {'fields': ('username', 'email', 'password')}),
         (('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser',
@@ -74,3 +87,6 @@ class ScholarAdmin(BaseUserAdmin):
     search_fields = ('email', 'username')
     ordering = ('username', )
     inlines = (UserProfileInline, )
+
+
+admin.site.register(UserIdCounter)

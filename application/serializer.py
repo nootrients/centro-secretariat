@@ -15,6 +15,7 @@ class EligibilityConfigSerializer(serializers.ModelSerializer):
 
 class ApplicationsSerializer(serializers.ModelSerializer):
     """Serializer for Applications model."""
+    national_id = serializers.FileField()
 
     class Meta:
         model = Applications
@@ -22,12 +23,12 @@ class ApplicationsSerializer(serializers.ModelSerializer):
         read_only_fields = ('firstname', 
                             'lastname',
                             'middlename',
+#                            'birthdate',
                             
                             'district',
-                            
+
                             'is_applying_for_merit',
-        
-                            'total_units_enrolled',
+                            'years_of_residency',
                             
                             'is_eligible',
                             'is_approved',
@@ -44,10 +45,15 @@ class EligibleApplicationsSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+# Change to something else, RetrieveUpdate should be used for retrieval of application in the applicant's side
 class ApplicationRetrieveUpdateSerializer(serializers.ModelSerializer):
     """Serializer for retrieving and approving/rejecting an eligible scholarship application."""
     
     class Meta:
         model = Applications
         fields = ['is_approved']
+
+
+class IDImageSerializer(serializers.Serializer):
+    national_id = serializers.ImageField()
 

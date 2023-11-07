@@ -21,6 +21,7 @@ urlpatterns = [
     # path('users/<str:username>/profile/', views.UserProfileDetailView.as_view(), name='user_profile'),
 
     path('profile/', views.UserProfileDetail.as_view()),
+    #path('change_password/', views.UserChangePassword.as_view()),
     
     path('users/', views.AccountList.as_view(), name='list_all_registered_accounts'),
 

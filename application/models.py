@@ -150,7 +150,7 @@ class Applications(models.Model):
 
     birthdate = models.DateField(null=True, blank=False)                          # Auto generated from the scanned National ID
     
-    house_address = models.CharField(max_length=50, null=True, blank=False)
+    house_address = models.TextField(max_length=50, null=True, blank=False)
     barangay = models.CharField(max_length=50, null=True, choices=Barangay.choices)           # Possible duplicate value on UserProfile model
     district = models.CharField(max_length=3, null=True, choices=District.choices)            # Editable = False || Auto-fill based on Barangay's value
     
@@ -175,7 +175,6 @@ class Applications(models.Model):
     years_of_residency = models.PositiveSmallIntegerField(null=True, blank=False)                      # In Taguig City
 
     voter_certificate = models.FileField(upload_to='applicant/voters_certificate', null=True, blank=False)
-
 
     """
     CURRENT EDUCATION SECTION    
@@ -210,33 +209,23 @@ class Applications(models.Model):
 
 
     """
-    FAMILY BACKGROUND
+    GUARDIAN'S BACKGROUND
     """
-    # Father's Side
-    fathers_complete_name = models.CharField(max_length=50, null=True, blank=False)
-    fathers_complete_address = models.CharField(max_length=70, null=True, blank=False)
-    fathers_contact_number = models.CharField(max_length=11, null=True, blank=False)
-    fathers_occupation = models.CharField(max_length=30, null=True, blank=False)
-    fathers_place_of_work = models.CharField(max_length=30, null=True, blank=False)
-    fathers_educational_attainment = models.CharField(max_length=30, null=True, blank=False)
+    guardian_complete_name = models.CharField(max_length=50, null=True, blank=False)
+    guardian_complete_address = models.TextField(max_length=100, null=True, blank=False)
+    guardian_contact_number = models.CharField(max_length=11, null=True, blank=False)
+    guardian_occupation = models.CharField(max_length=30, null=True, blank=False)
+    guardian_place_of_work = models.TextField(max_length=30, null=True, blank=False)
+    guardian_educational_attainment = models.CharField(max_length=30, null=True, blank=False)
 
-    # Mother's Side
-    mothers_complete_name = models.CharField(max_length=50, null=True, blank=False)
-    mothers_complete_address = models.CharField(max_length=70, null=True, blank=False)
-    mothers_contact_number = models.CharField(max_length=11, null=True, blank=False)
-    mothers_occupation = models.CharField(max_length=30, null=True, blank=False)
-    mothers_place_of_work = models.CharField(max_length=30, null=True, blank=False)
-    mothers_educational_attainment = models.CharField(max_length=30, null=True, blank=False)
-
-    guardians_voter_certificate = models.FileField(upload_to='guardian/voters_certificate', null=True, blank=False, help_text="Insert one of your guardian's voter certificate (for verification and validation purposes).")
-
+    guardians_voter_certificate = models.FileField(upload_to='guardian/voters_certificate', null=True, blank=False, help_text="Insert your guardian's voter certificate (for verification and validation purposes).")
+    
 
     """
     MISCELLANEOUS INFORMATION    
     """
-    registration_form = models.FileField(upload_to='applicant/registration_form', null=True, blank=False)
-
-    total_units_enrolled = models.PositiveSmallIntegerField(null=True, blank=False)             # Derive from the uploaded registration form
+    registration_form = models.FileField(upload_to='applicant/registration_form', null=True, blank=False, help_text="Insert your Registration/Enrollment Form for the current semester.")
+    total_units_enrolled = models.PositiveSmallIntegerField(null=True, blank=False)
     is_ladderized = models.BooleanField(null=True, blank=False)
     number_of_semesters_before_graduating = models.PositiveSmallIntegerField(null=True, blank=False)
     
@@ -244,7 +233,7 @@ class Applications(models.Model):
     shiftee = models.CharField(max_length=30, null=True, default='N/A', blank=False, help_text="Title of your previous course (if shiftee).")
 
     student_status = models.CharField(max_length=20, choices=StudentStatus.choices, null=True, blank=False)
-
+    
 
     """
     UTILITIES SECTION
@@ -259,12 +248,11 @@ class Applications(models.Model):
 
     # ADD `STATUS` FOR LOGGING/TRACKING
 
+    @property
     def calculate_age(self):
         today = date.today()
         age = (
-            today.year
-            - self.birthdate.year
-            - ((today.month, today.day) < (self.birthdate.month, self.birthdate.day))
+            today.year - self.birthdate.year - ((today.month, today.day) < (self.birthdate.month, self.birthdate.day))
         )
         return age
 
@@ -305,8 +293,18 @@ class Applications(models.Model):
         self.district = district_mapping.get(self.barangay, self.district)
         super().save(*args, **kwargs)
 
-    def __str__(self):
-        return self.application_uuid
+    def delete(self, *args, **kwargs):
+        # Delete associated files
+        for file_field in self._meta.fields:
+            if isinstance(file_field, models.FileField):
+                file = getattr(self, file_field.name)
+                if file:
+                    # Assuming you're using the default storage
+                    if file.storage.exists(file.name):
+                        file.storage.delete(file.name)
+
+        # Call the parent class's delete method to delete the database record
+        super(Applications, self).delete(*args, **kwargs)
 
 
 class EligibilityConfig(models.Model):
