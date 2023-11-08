@@ -10,6 +10,7 @@ urlpatterns = [
     # API-endpoint for submitting scholarship application
     path('', views.ApplicationForm.as_view(), name='application-form'),
     path('review-and-process/', views.ReviewAndProcessView.as_view(), name='review-and-process'),
+    #path('review-and-process/', views.ReviewAndProcessView.as_view(), name='review-and-process'),
 
     # GET (only those who passed the Automated Eligibility Checking)
     path('list/', views.EligibleApplicationsList.as_view(), name='view-eligible-applications-list'),

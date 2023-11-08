@@ -2,6 +2,11 @@ from rest_framework import serializers
 
 from application.models import Applications, EligibilityConfig
 
+from demographics.serializer import GenderSerializer
+from demographics.models import Gender
+
+from django.core.files.base import ContentFile
+import base64
 
 
 class EligibilityConfigSerializer(serializers.ModelSerializer):
@@ -15,26 +20,48 @@ class EligibilityConfigSerializer(serializers.ModelSerializer):
 
 class ApplicationsSerializer(serializers.ModelSerializer):
     """Serializer for Applications model."""
-    national_id = serializers.FileField()
+    #national_id = serializers.ImageField()
+    #national_id = serializers.ImageField(write_only=True)
+
+    lastname = serializers.CharField(write_only=True, allow_blank=True, required=False)
+    firstname = serializers.CharField(write_only=True, allow_blank=True, required=False)
+    middlename = serializers.CharField(write_only=True, allow_blank=True, required=False)
+
+    gender = serializers.PrimaryKeyRelatedField(
+        queryset=Gender.objects.all(),
+        write_only=True
+    )
 
     class Meta:
         model = Applications
         fields = '__all__'
-        read_only_fields = ('firstname', 
-                            'lastname',
-                            'middlename',
-#                            'birthdate',
+        read_only_fields = (#'firstname', 
+                            #'lastname',
+                            #'middlename',
+                            #'birthdate',
                             
                             'district',
 
-                            'is_applying_for_merit',
-                            'years_of_residency',
+                            #'is_applying_for_merit',
+                            #'years_of_residency',
                             
                             'is_eligible',
                             'is_approved',
                             'approved_by',
                             'created_at',
                             'updated_at')
+
+    def create(self, validated_data):
+        print("Creating Application with data:", validated_data)
+
+        # Extract and decode the base64_content
+        base64_content = validated_data.pop('base64_content', None)
+        if base64_content:
+            binary_content = base64.b64decode(base64_content)
+            validated_data['national_id'] = ContentFile(binary_content, name='national_id.jpg')
+
+        # Create and return the Applications object
+        return super(ApplicationsSerializer, self).create(validated_data)
         
     
 class EligibleApplicationsSerializer(serializers.ModelSerializer):
@@ -54,6 +81,20 @@ class ApplicationRetrieveUpdateSerializer(serializers.ModelSerializer):
         fields = ['is_approved']
 
 
-class IDImageSerializer(serializers.Serializer):
+class ReviewFormSerializer(serializers.Serializer):
     national_id = serializers.ImageField()
+    birthdate = serializers.DateField()
+    house_address = serializers.CharField()
+    barangay = serializers.CharField()
+    email_address = serializers.EmailField()
+    personalized_facebook_link = serializers.CharField()
+    religion = serializers.CharField()
+    applicant_status = serializers.CharField()
+    scholarship_type = serializers.CharField()
+    
+    gender = GenderSerializer()
+
+    lastname = serializers.CharField()
+    firstname = serializers.CharField()
+    middlename = serializers.CharField()
 

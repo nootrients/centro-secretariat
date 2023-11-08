@@ -15,13 +15,21 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 pytesseract.pytesseract.tesseract_cmd = "C:/Program Files/Tesseract-OCR/tesseract.exe"
 logging.basicConfig(level=logging.DEBUG)
 
-def extract_id_info(national_id):
+'''def extract_id_info(national_id):
     if isinstance(national_id, InMemoryUploadedFile):
         logging.debug(f'national_id: {national_id.name}')
         print(national_id.name)
 
         binary_data = national_id.read()
         nparr = np.fromstring(binary_data, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)''' 
+
+def extract_id_info(national_id_content, national_id_name):
+    if national_id_name:
+        logging.debug(f'national_id name: {national_id_name}')
+        
+    if national_id_content:
+        nparr = np.fromstring(national_id_content, np.uint8)
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR) 
         
         #img = cv2.imdecode(np.frombuffer(binary_data, np.uint8), cv2.IMREAD_COLOR)
