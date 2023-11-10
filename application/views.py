@@ -16,8 +16,8 @@ from rest_framework import permissions, status, generics
 from accounts.permissions import IsOfficer, IsHeadOfficer
 
 from .models import Applications, EligibilityConfig
-from .serializer import ApplicationsSerializer, EligibleApplicationsSerializer, EligibilityConfigSerializer, ReviewFormSerializer
-from .image_processing import extract_id_info
+from .serializer import ApplicationsSerializer, EligibleApplicationsSerializer, EligibilityConfigSerializer
+from .image_processing import extract_id_info, extract_applicant_voters
 
 from demographics.serializer import GenderSerializer
 
@@ -48,16 +48,6 @@ class ApplicationForm(CreateAPIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = ApplicationsSerializer
 
-    '''
-    # OLD || BEFORE INTEGRATING EXTRACTION
-    permission_classes = [permissions.AllowAny]
-    serializer_class = ApplicationsSerializer
-
-    def perform_create(self, serializer):
-        return serializer.save()
-    '''
-
-
     def post(self, request, format=None):
         serializer = ApplicationsSerializer(data=request.data)
         response_data = {'status': 'error', 'message': 'Data processing failed.'} # new
@@ -65,14 +55,11 @@ class ApplicationForm(CreateAPIView):
         if serializer.is_valid():
             # Use Django Sessions to TEMPORARILY save the data
             data = serializer.validated_data
-            print(f"Data: {data}")
+            
+            request.session['temp_data'] = {}                              # Initialize session for storing temp_data
 
-            # Store the national_id in temp_data                           # WORKING
-            national_id = data['national_id']                              # WORKING
-            request.session['temp_data'] = {}                              # WORKING
-
-            # Store all form data in temp_data                             # ADD NEW FIELDS AFTER FURTHER TESTING
-            request.session['temp_data'] = {
+            request.session['temp_data'] = {                               # Store all form data in temp_data
+            # Personal Information Section
                 'national_id_name': data['national_id'].name,
                 'national_id_content': data['national_id'].read(),
 
@@ -82,30 +69,67 @@ class ApplicationForm(CreateAPIView):
                 'email_address': data['email_address'],
                 'personalized_facebook_link': data['personalized_facebook_link'],
                 'religion': data['religion'],
-                'applicant_status': data['applicant_status'],
-                'scholarship_type': data['scholarship_type'],
+                
                 'gender': data['gender'].id if data.get('gender') else None,
-            }
 
-            # Execute OCR Script
-            # extracted_data = extract_id_info(national_id)                 # WORKING // REVISED
+            # Application Validation Section
+                'scholarship_type': data['scholarship_type'],
+                'semester': data['semester'],
+                
+                'informative_copy_of_grades_name': data['informative_copy_of_grades'].name,                    # Get file name instead of the whole file for processing
+                'informative_copy_of_grades_content': data['informative_copy_of_grades'].read(),               # Get file content(binary) instead of the whole file for processing
+                'is_applying_for_merit': data['is_applying_for_merit'],
+                
+                'voter_certificate_name': data['voter_certificate'].name,                                      # Get file name instead of the whole file for processing
+                'voter_certificate_content': data['voter_certificate'].read(),                                 # Get file content(binary) instead of the whole file for processing
             
-            extracted_data = extract_id_info(request.session['temp_data']['national_id_content'], request.session['temp_data']['national_id_name'])
-            print(f"extracted_data: {extracted_data}")
+            # Current Education Section
+                'university_attending': data['university_attending'].id if data.get('university_attending') else None,
+                
+                'registration_form_name': data['registration_form'].name,                                      # Get file name instead of the whole file for processing
+                'registration_form_content': data['registration_form'].read(),                                 # Get file content(binary) instead of the whole file for processing
+                
+                'total_units_enrolled': data['total_units_enrolled'],
+                'is_ladderized': data['is_ladderized'],
+                'course_taking': data['course_taking'].id if data.get('course_taking') else None,
+                'year_level': data['year_level'],
+                'is_graduating': data['is_graduating'],
+                'course_duration': data['course_duration'],
+            }
             
-            if extracted_data:
+            # Execute OCR scripts
+            extracted_id_data = extract_id_info(request.session['temp_data']['national_id_content'], request.session['temp_data']['national_id_name'])
+            extracted_voters_data = extract_applicant_voters(request.session['temp_data']['voter_certificate_content'], request.session['temp_data']['voter_certificate_content'])
+            
+            if extracted_id_data and extracted_voters_data:
                 temp_data = request.session.get('temp_data', {})
-                temp_data.update(extracted_data)
+
+                temp_data.update(extracted_id_data)
+                temp_data.update(extracted_voters_data)
+                
                 request.session['temp_data'] = temp_data
 
+                # Files or Images that needs to be converted to Base64 for Serialization upon POST() method
                 national_id_content = temp_data['national_id_content']
+                informative_copy_of_grades_content = temp_data['informative_copy_of_grades_content']
+                voter_certificate_content = temp_data['voter_certificate_content']
+                registration_form_content = temp_data['registration_form_content']
 
-                if national_id_content:
+                if national_id_content and informative_copy_of_grades_content and voter_certificate_content and registration_form_content:
+                    # Encode Files to Base64 format
                     national_id_content_base64 = base64.b64encode(national_id_content).decode('utf-8')
+                    informative_copy_of_grades_content_base64 = base64.b64encode(informative_copy_of_grades_content).decode('utf-8')
+                    voter_certificate_content_base64 = base64.b64encode(voter_certificate_content).decode('utf-8')
+                    registration_form_content_base64 = base64.b64encode(registration_form_content).decode('utf-8')
+
+                    # Store files encoded in Base64 format back to the temp_data (in session)
                     temp_data['national_id_content'] = national_id_content_base64
+                    temp_data['informative_copy_of_grades_content'] = informative_copy_of_grades_content_base64
+                    temp_data['voter_certificate_content'] = voter_certificate_content_base64
+                    temp_data['registration_form_content'] = registration_form_content_base64
                 
-                #print(f"temp_data: {temp_data}")
-                
+                print(f"temp_data: {temp_data}")
+
                 response_data = {
                     'status': 'success',
                     'message': 'Data has been successfully processed and temporarily stored.',
@@ -128,25 +152,52 @@ class ReviewAndProcessView(APIView):
 
     def get(self, request, format=None):
         temp_data = request.session.get('temp_data', {})
-        #return Response({"temp_data": temp_data})                      # Display the form data for review || WORKING // REVISED - DEPRECATED
         
-        base64_content = temp_data.get('national_id_content')
+        id_base64_content = temp_data.get('national_id_content')
+        icg_base64_content = temp_data.get('informative_copy_of_grades_content')                    # New
+        applicant_voters_base64_content = temp_data.get('voter_certificate_content')                # New
+        registration_form_base64_content = temp_data.get('registration_form_content')               # New
 
-        if base64_content:
+        if id_base64_content and icg_base64_content and applicant_voters_base64_content and registration_form_base64_content:
             applications_data = {
-                'national_id': base64_content,
+            # Personal Information Section
+                'national_id': id_base64_content,
                 'lastname': temp_data.get('lastname'),
                 'firstname': temp_data.get('firstname'),
                 'middlename': temp_data.get('middlename'),
+                
                 'birthdate': temp_data.get('birthdate'),
                 'house_address': temp_data.get('house_address'),
                 'barangay': temp_data.get('barangay'),
                 'email_address': temp_data.get('email_address'),
                 'personalized_facebook_link': temp_data.get('personalized_facebook_link'),
                 'religion': temp_data.get('religion'),
-                'applicant_status': temp_data.get('applicant_status'),
-                'scholarship_type': temp_data.get('scholarship_type'),
+                
                 'gender': temp_data.get('gender'),
+
+            # Application Validation Section
+                'scholarship_type': temp_data.get('scholarship_type'),
+                'semester': temp_data.get('semester'),
+
+                'informative_copy_of_grades': icg_base64_content,
+                'is_applying_for_merit': temp_data.get('is_applying_for_merit'),
+                
+                'voter_certificate_name': applicant_voters_base64_content,
+                'years_of_residency': temp_data.get('years_of_residency'),
+                'voters_issued_at': temp_data.get('voters_issued_at'),
+                'voters_issuance_date': temp_data.get('voters_issuance_date'),
+            
+            # Current Education Section
+                'university_attending': temp_data.get('university_attending'),
+                
+                'registration_form': registration_form_base64_content,
+                
+                'total_units_enrolled': temp_data.get('total_units_enrolled'),
+                'is_ladderized': temp_data.get('is_ladderized'),
+                'course_taking': temp_data.get('course_taking'),
+                'year_level': temp_data.get('year_level'),
+                'is_graduating': temp_data.get('is_graduating'),
+                'course_duration': temp_data.get('course_duration'),
             }
             return Response({"applications_data": applications_data})
     

@@ -11,8 +11,7 @@ class AcademicYearField(models.CharField):
     def __init__(self, *args, **kwargs):
         kwargs['max_length'] = 9
         kwargs['editable'] = False
-        kwargs['default'] = self.calculate_academic_year()
-        
+        kwargs['default'] = self.calculate_academic_year
         super().__init__(*args, **kwargs)
 
     def calculate_academic_year(self):
@@ -20,7 +19,7 @@ class AcademicYearField(models.CharField):
         current_year = today.year
         next_year = current_year + 1
 
-        return f"{current_year}-{next_year}" 
+        return f"{current_year}-{next_year}"
 
 
 class PartneredUniversities(models.Model):
@@ -136,9 +135,8 @@ class Applications(models.Model):
     application_uuid = models.UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
 
 
-    """
-    PERSONAL INFORMATION SECTION
-    """
+
+#PERSONAL INFORMATION SECTION
     national_id = models.ImageField(upload_to='applicant/ids', null=True, blank=False)
     
     # Auto generated from the scanned National ID
@@ -146,9 +144,9 @@ class Applications(models.Model):
     firstname = models.CharField(max_length=30, null=True, blank=True)
     middlename = models.CharField(max_length=30, null=True, blank=True)          
     
-    gender = models.ForeignKey(Gender, on_delete=models.CASCADE, null=True, blank=False)                                        
+    gender = models.ForeignKey(Gender, on_delete=models.CASCADE, null=True, blank=False)                                    
 
-    birthdate = models.DateField(null=True, blank=False)                          # Auto generated from the scanned National ID
+    birthdate = models.DateField(null=True, blank=False)
     
     house_address = models.TextField(max_length=50, null=True, blank=False)
     barangay = models.CharField(max_length=50, null=True, choices=Barangay.choices)           # Possible duplicate value on UserProfile model
@@ -160,36 +158,45 @@ class Applications(models.Model):
     religion = models.CharField(max_length=30, choices=Religion.choices, null=True, blank=False)
 
 
-    """
-    APPLICATION VALIDATION SECTION
-    """
+
+#APPLICATION VALIDATION SECTION
     applicant_status = models.CharField(max_length=18, choices=ApplicantStatus.choices, null=True, default=ApplicantStatus.NEW_APPLICANT, blank=False)
-    scholarship_type = models.CharField(max_length=20, choices=ScholarshipType.choices, null=True, default=ScholarshipType.BASIC_SCHOLARSHIP, blank=False)
-    
-    '''academic_year = AcademicYearField()
+    scholarship_type = models.CharField(max_length=20, 
+                                        choices=ScholarshipType.choices, 
+                                        null=True, 
+                                        default=ScholarshipType.BASIC_SCHOLARSHIP, 
+                                        blank=False,
+                                        help_text='Kindly refer to the guidelines. Fraudulent inputs will deem your application as void.'
+                                        )
+
+    applying_for_academic_year = AcademicYearField()
     semester = models.CharField(max_length=20, null=True, choices=Semester.choices, default=Semester.FIRST_SEMESTER, blank=False)
 
     informative_copy_of_grades = models.FileField(upload_to='applicant/icg', null=True, blank=False)
-    is_applying_for_merit = models.BooleanField(null=False, default=False, blank=False)                 # (SWA at least 1.75 equivalent to 88.75%) || Get Informative Copy of Grades > 
+    is_applying_for_merit = models.BooleanField(null=False, default=False, blank=False, help_text='SWA at least 1.75 equivalent to 88.75%).')
+
+    voter_certificate = models.FileField(upload_to='applicant/voters_certificate', null=True, blank=False)
     
-    years_of_residency = models.PositiveSmallIntegerField(null=True, blank=False)                      # In Taguig City
+    # Auto generated from the scanned Voter's Certificate
+    years_of_residency = models.CharField(max_length = 30, null=True, blank=False)
+    voters_issued_at = models.CharField(max_length=70, null=True, blank=True)
+    voters_issuance_date = models.CharField(max_length=70, null=True, blank=True)
 
-    voter_certificate = models.FileField(upload_to='applicant/voters_certificate', null=True, blank=False)'''
-
-    """
-    CURRENT EDUCATION SECTION    
-    """
-    '''university_attending = models.ForeignKey(PartneredUniversities, on_delete=models.CASCADE, max_length=40, null=True, blank=False)
+    
+# CURRENT EDUCATION SECTION    
+    university_attending = models.ForeignKey(PartneredUniversities, on_delete=models.CASCADE, max_length=40, null=True, blank=False)
+    registration_form = models.FileField(upload_to='applicant/registration_form', null=True, blank=False, help_text="Insert your Registration/Enrollment Form for the current semester.")
+    total_units_enrolled = models.PositiveSmallIntegerField(null=True, blank=False)
+    is_ladderized = models.BooleanField(null=True, blank=False)
     course_taking = models.ForeignKey(Courses, on_delete=models.CASCADE, max_length=50, null=True, blank=False)
     year_level = models.CharField(max_length=15, choices=YearLevel.choices, null=True, blank=False)
     is_graduating = models.BooleanField(null=False, blank=False, default=False)
-    course_duration = models.CharField(max_length=15, choices=CourseDuration.choices, null=True, blank=False)'''
+    course_duration = models.CharField(max_length=15, choices=CourseDuration.choices, null=True, blank=False)
     
 
-    """
-    EDUCATIONAL BACKGROUND
-    """
-    '''# Elementary
+# EDUCATIONAL BACKGROUND
+    '''
+    # Elementary
     elementary_school = models.CharField(max_length=50, null=True, blank=False)
     elementary_school_type = models.CharField(max_length=10, choices=SchoolType.choices, null=True, blank=False)
     elementary_school_address = models.TextField(max_length=100, null=True, blank=False)
@@ -205,13 +212,11 @@ class Applications(models.Model):
     shs_school = models.CharField(max_length=50, null=True, blank=False)
     shs_school_type = models.CharField(max_length=10, choices=SchoolType.choices, null=True, blank=False)
     shs_school_address = models.TextField(max_length=100, null=True, blank=False)
-    shs_start_end = models.CharField(max_length=9, null=True, blank=False)'''
+    shs_start_end = models.CharField(max_length=9, null=True, blank=False)
 
 
-    """
-    GUARDIAN'S BACKGROUND
-    """
-    '''guardian_complete_name = models.CharField(max_length=50, null=True, blank=False)
+#GUARDIAN'S BACKGROUND
+    guardian_complete_name = models.CharField(max_length=50, null=True, blank=False)
     guardian_complete_address = models.TextField(max_length=100, null=True, blank=False)
     guardian_contact_number = models.CharField(max_length=11, null=True, blank=False)
     guardian_occupation = models.CharField(max_length=30, null=True, blank=False)
@@ -219,14 +224,9 @@ class Applications(models.Model):
     guardian_educational_attainment = models.CharField(max_length=30, null=True, blank=False)
 
     guardians_voter_certificate = models.FileField(upload_to='guardian/voters_certificate', null=True, blank=False, help_text="Insert your guardian's voter certificate (for verification and validation purposes).")
-    '''
+    guardians_years_of_residency = models.PositiveSmallIntegerField(null=True, blank=False)
 
-    """
-    MISCELLANEOUS INFORMATION    
-    """
-    '''registration_form = models.FileField(upload_to='applicant/registration_form', null=True, blank=False, help_text="Insert your Registration/Enrollment Form for the current semester.")
-    total_units_enrolled = models.PositiveSmallIntegerField(null=True, blank=False)
-    is_ladderized = models.BooleanField(null=True, blank=False)
+# MISCELLANEOUS INFORMATION    
     number_of_semesters_before_graduating = models.PositiveSmallIntegerField(null=True, blank=False)
     
     transferee = models.CharField(max_length=50, null=True, default='N/A', blank=False, help_text="Name of your previous school/university.")
@@ -235,15 +235,13 @@ class Applications(models.Model):
     student_status = models.CharField(max_length=20, choices=StudentStatus.choices, null=True, blank=False)'''
     
 
-    """
-    UTILITIES SECTION
-    """
+# UTILITIES SECTION
     is_eligible = models.BooleanField(null=False, default=False)
     is_approved = models.BooleanField(null=False, default=False)
-
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
+    
     approved_by = models.ForeignKey(Officer, on_delete=models.CASCADE, null=True, blank=True)
 
     # ADD `STATUS` FOR LOGGING/TRACKING
@@ -312,7 +310,7 @@ class EligibilityConfig(models.Model):
         FIRST_SEMESTER = "FIRST SEMESTER", "FIRST SEMESTER"
         SECOND_SEMESTER = "SECOND SEMESTER", "SECOND SEMESTER"
     
-    academic_year = AcademicYearField()
+    applying_for_academic_year = AcademicYearField()
     semester = models.CharField(max_length=50, null=False, blank=False, choices=Semester.choices, default=Semester.FIRST_SEMESTER)
     minimum_residency = models.PositiveSmallIntegerField(null=False, blank=False, default=3)
     voters_validity_year_start = models.PositiveSmallIntegerField(null=True, blank=False)

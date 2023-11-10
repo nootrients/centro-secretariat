@@ -27,6 +27,12 @@ class ApplicationsSerializer(serializers.ModelSerializer):
     firstname = serializers.CharField(write_only=True, allow_blank=True, required=False)
     middlename = serializers.CharField(write_only=True, allow_blank=True, required=False)
 
+
+    # Comment out for demonstration || CONTINUE AFTER
+    years_of_residency = serializers.CharField(write_only=True, allow_blank=True, required=False)
+    voters_issued_at = serializers.CharField(write_only=True, allow_blank=True, required=False)
+    voters_issuance_date = serializers.CharField(write_only=True, allow_blank=True, required=False)
+    
     gender = serializers.PrimaryKeyRelatedField(
         queryset=Gender.objects.all(),
         write_only=True
@@ -35,21 +41,15 @@ class ApplicationsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Applications
         fields = '__all__'
-        read_only_fields = (#'firstname', 
-                            #'lastname',
-                            #'middlename',
-                            #'birthdate',
+        read_only_fields = ('district',
                             
-                            'district',
+                            'applicant_status',
+                            'applying_for_academic_year',
 
-                            #'is_applying_for_merit',
-                            #'years_of_residency',
-                            
                             'is_eligible',
                             'is_approved',
                             'approved_by',
-                            'created_at',
-                            'updated_at')
+                        )
 
     def create(self, validated_data):
         print("Creating Application with data:", validated_data)
@@ -97,4 +97,3 @@ class ReviewFormSerializer(serializers.Serializer):
     lastname = serializers.CharField()
     firstname = serializers.CharField()
     middlename = serializers.CharField()
-
