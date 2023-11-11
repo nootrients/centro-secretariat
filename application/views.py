@@ -4,7 +4,7 @@ from django.urls import reverse
 
 from rest_framework.generics import CreateAPIView, ListAPIView, RetrieveAPIView, RetrieveUpdateAPIView
 from rest_framework.views import APIView
-from rest_framework.parsers import MultiPartParser
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -17,7 +17,7 @@ from accounts.permissions import IsOfficer, IsHeadOfficer
 
 from .models import Applications, EligibilityConfig
 from .serializer import ApplicationsSerializer, EligibleApplicationsSerializer, EligibilityConfigSerializer
-from .image_processing import extract_id_info, extract_applicant_voters
+from .image_processing import extract_id_info, extract_applicant_voters, extract_guardian_voters
 
 from demographics.serializer import GenderSerializer
 
@@ -95,17 +95,55 @@ class ApplicationForm(CreateAPIView):
                 'year_level': data['year_level'],
                 'is_graduating': data['is_graduating'],
                 'course_duration': data['course_duration'],
+
+            # Educational Background Section
+                # Elementary
+                'elementary_school': data['elementary_school'],
+                'elementary_school_type': data['elementary_school_type'],
+                'elementary_school_address': data['elementary_school_address'],
+                'elementary_start_end': data['elementary_start_end'],
+
+                # JHS
+                'jhs_school': data['jhs_school'],
+                'jhs_school_type': data['jhs_school_type'],
+                'jhs_school_address': data['jhs_school_address'],
+                'jhs_start_end': data['jhs_start_end'],
+
+                # SHS
+                'shs_school': data['shs_school'],
+                'shs_school_type': data['shs_school_type'],
+                'shs_school_address': data['shs_school_address'],
+                'shs_start_end': data['shs_start_end'],
+
+            # Guardian's Background Section
+                'guardian_complete_name': data['guardian_complete_name'],
+                'guardian_complete_address': data['guardian_complete_address'],
+                'guardian_contact_number': data['guardian_contact_number'],
+                'guardian_occupation': data['guardian_occupation'],
+                'guardian_place_of_work': data['guardian_place_of_work'],
+                'guardian_educational_attainment': data['guardian_educational_attainment'],
+
+                'guardians_voter_certificate_name': data['guardians_voter_certificate'].name,                   # Get file name instead of the whole file for processing
+                'guardians_voter_certificate_content': data['guardians_voter_certificate'].read(),              # Get file content(binary) instead of the whole file for processing
+
+            # Miscellaneous Section
+                'number_of_semesters_before_graduating': data['number_of_semesters_before_graduating'],
+                'transferee': data['transferee'],
+                'shiftee': data['shiftee'],
+                'student_status': data['student_status'],
             }
             
             # Execute OCR scripts
             extracted_id_data = extract_id_info(request.session['temp_data']['national_id_content'], request.session['temp_data']['national_id_name'])
-            extracted_voters_data = extract_applicant_voters(request.session['temp_data']['voter_certificate_content'], request.session['temp_data']['voter_certificate_content'])
+            extracted_voters_data = extract_applicant_voters(request.session['temp_data']['voter_certificate_content'], request.session['temp_data']['voter_certificate_name'])
+            extracted_guardian_info_data = extract_guardian_voters(request.session['temp_data']['guardians_voter_certificate_content'], request.session['temp_data']['guardians_voter_certificate_name'])
             
-            if extracted_id_data and extracted_voters_data:
+            if extracted_id_data and extracted_voters_data and extracted_guardian_info_data:
                 temp_data = request.session.get('temp_data', {})
 
                 temp_data.update(extracted_id_data)
                 temp_data.update(extracted_voters_data)
+                temp_data.update(extracted_guardian_info_data)
                 
                 request.session['temp_data'] = temp_data
 
@@ -114,19 +152,22 @@ class ApplicationForm(CreateAPIView):
                 informative_copy_of_grades_content = temp_data['informative_copy_of_grades_content']
                 voter_certificate_content = temp_data['voter_certificate_content']
                 registration_form_content = temp_data['registration_form_content']
+                guardians_voter_certificate_content = temp_data['guardians_voter_certificate_content']
 
-                if national_id_content and informative_copy_of_grades_content and voter_certificate_content and registration_form_content:
+                if national_id_content and informative_copy_of_grades_content and voter_certificate_content and registration_form_content and guardians_voter_certificate_content:
                     # Encode Files to Base64 format
                     national_id_content_base64 = base64.b64encode(national_id_content).decode('utf-8')
                     informative_copy_of_grades_content_base64 = base64.b64encode(informative_copy_of_grades_content).decode('utf-8')
                     voter_certificate_content_base64 = base64.b64encode(voter_certificate_content).decode('utf-8')
                     registration_form_content_base64 = base64.b64encode(registration_form_content).decode('utf-8')
+                    guardians_voter_certificate_content_base64 = base64.b64encode(guardians_voter_certificate_content).decode('utf-8')
 
                     # Store files encoded in Base64 format back to the temp_data (in session)
                     temp_data['national_id_content'] = national_id_content_base64
                     temp_data['informative_copy_of_grades_content'] = informative_copy_of_grades_content_base64
                     temp_data['voter_certificate_content'] = voter_certificate_content_base64
                     temp_data['registration_form_content'] = registration_form_content_base64
+                    temp_data['guardians_voter_certificate_content'] = guardians_voter_certificate_content_base64
                 
                 print(f"temp_data: {temp_data}")
 
@@ -150,15 +191,18 @@ class ReviewAndProcessView(APIView):
     """
     permission_classes = [permissions.AllowAny]
 
+    parser_classes = [MultiPartParser, FormParser]
+
     def get(self, request, format=None):
         temp_data = request.session.get('temp_data', {})
         
         id_base64_content = temp_data.get('national_id_content')
-        icg_base64_content = temp_data.get('informative_copy_of_grades_content')                    # New
-        applicant_voters_base64_content = temp_data.get('voter_certificate_content')                # New
-        registration_form_base64_content = temp_data.get('registration_form_content')               # New
+        icg_base64_content = temp_data.get('informative_copy_of_grades_content')
+        applicant_voters_base64_content = temp_data.get('voter_certificate_content')
+        registration_form_base64_content = temp_data.get('registration_form_content')
+        guardian_voters_base64_content = temp_data.get('guardians_voter_certificate_content')
 
-        if id_base64_content and icg_base64_content and applicant_voters_base64_content and registration_form_base64_content:
+        if id_base64_content and icg_base64_content and applicant_voters_base64_content and registration_form_base64_content and guardian_voters_base64_content:
             applications_data = {
             # Personal Information Section
                 'national_id': id_base64_content,
@@ -182,7 +226,7 @@ class ReviewAndProcessView(APIView):
                 'informative_copy_of_grades': icg_base64_content,
                 'is_applying_for_merit': temp_data.get('is_applying_for_merit'),
                 
-                'voter_certificate_name': applicant_voters_base64_content,
+                'voter_certificate': applicant_voters_base64_content,
                 'years_of_residency': temp_data.get('years_of_residency'),
                 'voters_issued_at': temp_data.get('voters_issued_at'),
                 'voters_issuance_date': temp_data.get('voters_issuance_date'),
@@ -198,6 +242,44 @@ class ReviewAndProcessView(APIView):
                 'year_level': temp_data.get('year_level'),
                 'is_graduating': temp_data.get('is_graduating'),
                 'course_duration': temp_data.get('course_duration'),
+
+            # Educational Background Section
+                # Elementary
+                'elementary_school': temp_data.get('elementary_school'),
+                'elementary_school_type': temp_data.get('elementary_school_type'),
+                'elementary_school_address': temp_data.get('elementary_school_address'),
+                'elementary_start_end': temp_data.get('elementary_start_end'),
+
+                # JHS
+                'jhs_school': temp_data.get('jhs_school'),
+                'jhs_school_type': temp_data.get('jhs_school_type'),
+                'jhs_school_address': temp_data.get('jhs_school_address'),
+                'jhs_start_end': temp_data.get('jhs_start_end'),
+
+                # SHS
+                'shs_school': temp_data.get('shs_school'),
+                'shs_school_type': temp_data.get('shs_school_type'),
+                'shs_school_address': temp_data.get('shs_school_address'),
+                'shs_start_end': temp_data.get('shs_start_end'),
+
+            # Guardian's Section
+                'guardian_complete_name': temp_data.get('guardian_complete_name'),
+                'guardian_complete_address': temp_data.get('guardian_complete_address'),
+                'guardian_contact_number': temp_data.get('guardian_contact_number'),
+                'guardian_occupation': temp_data.get('guardian_occupation'),
+                'guardian_place_of_work': temp_data.get('guardian_place_of_work'),
+                'guardian_educational_attainment': temp_data.get('guardian_educational_attainment'),
+
+                'guardians_voter_certificate': guardian_voters_base64_content,
+                'guardians_years_of_residency': temp_data.get('guardians_years_of_residency'),
+                'guardians_voters_issued_at': temp_data.get('guardians_voters_issued_at'),
+                'guardians_voters_issuance_date': temp_data.get('guardians_voters_issuance_date'),
+            
+            # Miscellaneous Section
+                'number_of_semesters_before_graduating': temp_data.get('number_of_semesters_before_graduating'),
+                'transferee': temp_data.get('transferee'),
+                'shiftee': temp_data.get('shiftee'),
+                'student_status': temp_data.get('student_status'),
             }
             return Response({"applications_data": applications_data})
     
@@ -222,9 +304,10 @@ class ReviewAndProcessView(APIView):
         # ADD MORE DEPENDING ON FIELDS THAT NEEDS OCR
         
         request.session['temp_data'] = temp_data                        # Save updated session data
-
+        
         print(request.session['temp_data'])
 
+        print(request.data)
         #serializer = ApplicationsSerializer(data=temp_data)            # WORKING
         serializer = ApplicationsSerializer(data=request.data)
 

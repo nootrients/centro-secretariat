@@ -538,7 +538,253 @@ def extract_applicant_voters(voter_certificate_content, voter_certificate_name):
         logging.error('voters_certificate is not a File object')
         return None
 
-def extract_guardian_voters(uploaded_guardian_voters):
-    # Preprocess the uploaded image
-    pass
+def extract_guardian_voters(guardians_voter_certificate_content, guardians_voter_certificate_name):
+    if guardians_voter_certificate_name:
+        logging.debug(f'guardians_voter_certificate name: {guardians_voter_certificate_name}')
+        
+    if guardians_voter_certificate_content:
+        nparr = np.fromstring(guardians_voter_certificate_content, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR) 
+
+        if img is not None:
+            #============================================================================
+            # Rescaling Image
+            desired_dpi = 300
+
+            original_width, original_height = img.shape[1], img.shape[0]
+            new_width = int(original_width * (desired_dpi / 72.0))                                  # 72 DPI is the default DPI for most images
+            new_height = int(original_height * (desired_dpi / 72.0))
+
+            resized_image = cv2.resize(img, (new_width, new_height))
+            #============================================================================
+
+            #============================================================================
+            # Add borders to the image
+            def add_border(image):
+                return cv2.copyMakeBorder(
+                    src=image,
+                    top=20,
+                    bottom=20,
+                    left=20,
+                    right=20,
+                    borderType=cv2.BORDER_CONSTANT,
+                    value=(255, 255, 255))
+
+            bordered_image = add_border(img)
+            #============================================================================
+
+            #============================================================================
+            # Image Binarization
+            def grayscale(image):
+                return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+            gray_image = grayscale(img)
+
+            # Apply Blur to reduce noise
+            def apply_blur(image):
+                return cv2.GaussianBlur(image, (3, 3), sigmaX=0, sigmaY=0)
+
+            gau_image = apply_blur(gray_image)
+
+            # Binarize
+            thresh, im_bw = cv2.threshold(gau_image, 160, 240, cv2.THRESH_BINARY)
+            #============================================================================
+
+            #============================================================================
+            # Dilation for font-thickening
+            def thick_font(image):
+                image = cv2.bitwise_not(image)
+                kernel = np.ones((1, 1), np.uint8)
+                image = cv2.dilate(image, kernel, iterations=1)
+
+                image = cv2.bitwise_not(image)
+
+                return (image)
+
+            dilated = thick_font(im_bw)
+            #============================================================================
+
+            image_to_text = pytesseract.image_to_string(dilated, lang='eng')
+
+            # Initializing variable (list) to store extracted data from the ID
+            extracted_guardian_info = {
+                'guardians_years_of_residency': None,
+                'guardians_voters_issued_at': None,
+                'guardians_voters_issuance_date': None
+            }
+            
+            residency_pattern = r"(\d+ year\(s\))"
+            voters_issued_at_pattern = r"\s+(.+?)(?=\n|$)"
+            voters_issuance_date_pattern = r"(\d{2}/\d{2}/\d{4})"
+            
+            residency_field_pattern = [
+                    'Municipality : ', 'Municipality ; ', 'Municipality . ',
+                    'Mun:cipality : ', 'Mun:cipality ; ', 'Mun:cipality . ',
+                    'Munic:pality : ', 'Munic:pality ; ', 'Munic:pality . ',
+                    'Municipal:ty : ', 'Municipal:ty ; ', 'Municipal:ty . ',
+                    'Municipatity : ', 'Municipatity ; ', 'Municipatity . ',
+                    'Mun:cipatity : ', 'Mun:cipatity ; ', 'Mun:cipatity . ',
+                    'Munic:patity : ', 'Munic:patity ; ', 'Munic:patity . ',
+                    'Municipat:ty : ', 'Municipat:ty ; ', 'Municipat:ty . ',
+                    'Municipalily : ', 'Municipalily ; ', 'Municipalily . ',
+                    'Mun:cipalily : ', 'Mun:cipalily ; ', 'Mun:cipalily . ',
+                    'Munic:palily : ', 'Munic:palily ; ', 'Munic:palily . ',
+                    'Municipal:ly : ', 'Municipal:ly ; ', 'Municipal:ly . ',
+                    'Municipaliiy : ', 'Municipaliiy ; ', 'Municipaliiy . ',
+                    'Mun:cipaliiy : ', 'Mun:cipaliiy ; ', 'Mun:cipaliiy . ',
+                    'Munic:paliiy : ', 'Munic:paliiy ; ', 'Munic:paliiy . ',
+                    'Municipal:iy : ', 'Municipal:iy ; ', 'Municipal:iy . ',
+                    'Municipaity : ', 'Municipaity ; ', 'Municipaity . ', 
+                    'Mun:cipaity : ', 'Mun:cipaity ; ', 'Mun:cipaity . ', 
+                    'Munic:paity : ', 'Munic:paity ; ', 'Munic:paity . ',
+                    'Municipa:ty : ', 'Municipa:ty ; ', 'Municipa:ty . ',
+                    'Municipaily : ', 'Municipaily ; ', 'Municipaily . ',
+                    'Mun:cipaily : ', 'Mun:cipaily ; ', 'Mun:cipaily . ',
+                    'Munic:paily : ', 'Munic:paily ; ', 'Munic:paily . ',
+                    'Municipa:ly : ', 'Municipa:ly ; ', 'Municipa:ly . ',
+                    'Municipaiiy : ', 'Municipaiiy ; ', 'Municipaiiy . ',
+                    'Mun:cipaiiy : ', 'Mun:cipaiiy ; ', 'Mun:cipaiiy . ',
+                    'Munic:paiiy : ', 'Munic:paiiy ; ', 'Munic:paiiy . ',
+                    'Municipa:iy : ', 'Municipa:iy ; ', 'Municipa:iy . ',
+                    'Municipai:y : ', 'Municipai:y ; ', 'Municipai:y . ', 
+                    'Municipatiiy : ', 'Municipatiiy ; ', 'Municipatiiy . ', 
+                    'Mun:cipatiiy : ', 'Mun:cipatiiy ; ', 'Mun:cipatiiy . ', 
+                    'Munic:patiiy : ', 'Munic:patiiy ; ', 'Munic:patiiy . ', 
+                    'Municipat:iy : ', 'Municipat:iy ; ', 'Municipat:iy . ', 
+                    'Municipali:y : ', 'Municipali:y ; ', 'Municipali:y . ',
+                    'Mun:cipali:y : ', 'Mun:cipali:y ; ', 'Mun:cipali:y . ',
+                    'Munic:pali:y : ', 'Munic:pali:y ; ', 'Munic:pali:y . ',
+                    'Municipal::y : ', 'Municipal::y ; ', 'Municipal::y . ',
+                    'Mun:cipai:y : ', 'Mun:cipai:y ; ', 'Mun:cipai:y . ', 
+                    'Munic:pai:y : ', 'Munic:pai:y ; ', 'Munic:pai:y . ',
+                    'Municipa::y : ', 'Municipa::y ; ', 'Municipa::y . ',
+                    'Municipal:ity : ', 'Municipal:ity ; ', 'Municipal:ity . ',
+
+                    'Niunicipality : ', 'Niunicipality ; ', 'Niunicipality . ',
+                    'Niun:cipality : ', 'Niun:cipality ; ', 'Niun:cipality . ',
+                    'Niunic:pality : ', 'Niunic:pality ; ', 'Niunic:pality . ',
+                    'Niunicipal:ty : ', 'Niunicipal:ty ; ', 'Niunicipal:ty . ',
+                    'Niunicipatity : ', 'Niunicipatity ; ', 'Niunicipatity . ',
+                    'Niun:cipatity : ', 'Niun:cipatity ; ', 'Niun:cipatity . ',
+                    'Niunic:patity : ', 'Niunic:patity ; ', 'Niunic:patity . ',
+                    'Niunicipat:ty : ', 'Niunicipat:ty ; ', 'Niunicipat:ty . ',
+                    'Niunicipalily : ', 'Niunicipalily ; ', 'Niunicipalily . ',
+                    'Niun:cipalily : ', 'Niun:cipalily ; ', 'Niun:cipalily . ',
+                    'Niunic:palily : ', 'Niunic:palily ; ', 'Niunic:palily . ',
+                    'Niunicipal:ly : ', 'Niunicipal:ly ; ', 'Niunicipal:ly . ',
+                    'Niunicipaity : ', 'Niunicipaity ; ', 'Niunicipaity . ',
+                    'Niun:cipaity : ', 'Niun:cipaity ; ', 'Niun:cipaity . ',
+                    'Niunic:paity : ', 'Niunic:paity ; ', 'Niunic:paity . ',
+                    'Niunicipa:ty : ', 'Niunicipa:ty ; ', 'Niunicipa:ty . ',
+                    'Niunicipaily : ', 'Niunicipaily ; ', 'Niunicipaily . ',
+                    'Niun:cipaily : ', 'Niun:cipaily ; ', 'Niun:cipaily . ',
+                    'Niunic:paily : ', 'Niunic:paily ; ', 'Niunic:paily . ',
+                    'Niunicipa:ly : ', 'Niunicipa:ly ; ', 'Niunicipa:ly . ',
+                    'Niunicipaliiy : ', 'Niunicipaliiy ; ', 'Niunicipaliiy . ',
+                    'Niunicipal:iy : ', 'Niunicipal:iy ; ', 'Niunicipal:iy . ', 
+                    'Niunicipatiiy : ', 'Niunicipatiiy ; ', 'Niunicipatiiy . ',
+                    'Niun:cipatiiy : ', 'Niun:cipatiiy ; ', 'Niun:cipatiiy . ',
+                    'Niunic:patiiy : ', 'Niunic:patiiy ; ', 'Niunic:patiiy . ',
+                    'Niunicipat:iy : ', 'Niunicipat:iy ; ', 'Niunicipat:iy . ', 
+                    'Niunicipali:y : ', 'Niunicipali:y ; ', 'Niunicipali:y . ',
+                    'Niun:cipaliiy : ', 'Niun:cipaliiy ; ', 'Niun:cipaliiy . ',
+                    'Niunic:paliiy : ', 'Niunic:paliiy ; ', 'Niunic:paliiy . ',
+                    'Niunicipal::y : ', 'Niunicipal::y ; ', 'Niunicipal::y . ', 
+                    'Niunicipaiiy : ', 'Niunicipaiiy ; ', 'Niunicipaiiy . ',
+                    'Niunicipa:iy : ', 'Niunicipa:iy ; ', 'Niunicipa:iy . ', 
+                    'Niunicipai:y : ', 'Niunicipai:y ; ', 'Niunicipai:y . ',
+                    'Niun:cipaiiy : ', 'Niun:cipaiiy ; ', 'Niun:cipaiiy . ',
+                    'Niunic:paiiy : ', 'Niunic:paiiy ; ', 'Niunic:paiiy . ',
+                    'Niunicipa::y : ', 'Niunicipa::y ; ', 'Niunicipa::y . ', 
+                    'Niunicipal:ity : ', 'Niunicipal:ity ; ', 'Niunicipal:ity . ',
+
+                    'Viunicipality : ', 'Viunicipality ; ', 'Viunicipality . ',
+                    'Viun:cipality : ', 'Viun:cipality ; ', 'Viun:cipality . ',
+                    'Viunic:pality : ', 'Viunic:pality ; ', 'Viunic:pality . ',
+                    'Viunicipal:ty : ', 'Viunicipal:ty ; ', 'Viunicipal:ty . ', 
+                    'Viunicipatity : ', 'Viunicipatity ; ', 'Viunicipatity . ',
+                    'Viun:cipatity : ', 'Viun:cipatity ; ', 'Viun:cipatity . ',
+                    'Viunic:patity : ', 'Viunic:patity ; ', 'Viunic:patity . ',
+                    'Viunicipat:ty : ', 'Viunicipat:ty ; ', 'Viunicipat:ty . ', 
+                    'Viunicipalily : ', 'Viunicipalily ; ', 'Viunicipalily . ',
+                    'Viun:cipalily : ', 'Viun:cipalily ; ', 'Viun:cipalily . ',
+                    'Viunic:palily : ', 'Viunic:palily ; ', 'Viunic:palily . ',
+                    'Viunicipal:ly : ', 'Viunicipal:ly ; ', 'Viunicipal:ly . ', 
+                    'Viunicipaity : ', 'Viunicipaity ; ', 'Viunicipaity . ',
+                    'Viun:cipaity : ', 'Viun:cipaity ; ', 'Viun:cipaity . ',
+                    'Viunic:paity : ', 'Viunic:paity ; ', 'Viunic:paity . ',
+                    'Viunicipa:ty : ', 'Viunicipa:ty ; ', 'Viunicipa:ty . ', 
+                    'Viunicipaily : ', 'Viunicipaily ; ', 'Viunicipaily . ',
+                    'Viun:cipaily : ', 'Viun:cipaily ; ', 'Viun:cipaily . ',
+                    'Viunic:paily : ', 'Viunic:paily ; ', 'Viunic:paily . ',
+                    'Viunicipa:ly : ', 'Viunicipa:ly ; ', 'Viunicipa:ly . ', 
+                    'Viunicipaliiy : ', 'Viunicipaliiy ; ', 'Viunicipaliiy . ', 
+                    'Viunicipatiiy : ', 'Viunicipatiiy ; ', 'Viunicipatiiy . ',
+                    'Viun:cipatiiy : ', 'Viun:cipatiiy ; ', 'Viun:cipatiiy . ',
+                    'Viunic:patiiy : ', 'Viunic:patiiy ; ', 'Viunic:patiiy . ',
+                    'Viunicipat:iy : ', 'Viunicipat:iy ; ', 'Viunicipat:iy . ', 
+                    'Viun:cipaliiy : ', 'Viun:cipaliiy ; ', 'Viun:cipaliiy . ',
+                    'Viunic:paliiy : ', 'Viunic:paliiy ; ', 'Viunic:paliiy . ',
+                    'Viunicipal:iy : ', 'Viunicipal:iy ; ', 'Viunicipal:iy . ', 
+                    'Viunicipaiiy : ', 'Viunicipaiiy ; ', 'Viunicipaiiy . ',
+                    'Viun:cipaiiy : ', 'Viun:cipaiiy ; ', 'Viun:cipaiiy . ',
+                    'Viunic:paiiy : ', 'Viunic:paiiy ; ', 'Viunic:paiiy . ',
+                    'Viunicipa:iy : ', 'Viunicipa:iy ; ', 'Viunicipa:iy . ', 
+                    'Viunicipal:ity : ', 'Viunicipal:ity ; ', 'Viunicipal:ity . ',]
+            voters_issued_at_field_pattern = [
+                    'CITY OF', 'SITY OF', 'OITY OF', 'DITY OF', 'QITY OF', 
+                    'ClTY OF', 'SlTY OF', 'OlTY OF', 'DlTY OF', 'QlTY OF',
+                    'CITY DF', 'SITY DF', 'OITY DF', 'DITY DF', 'QITY DF',
+                    'ClTY DF', 'SlTY DF', 'OlTY DF', 'DlTY DF', 'QlTY DF', 
+                    'CITY 0F', 'SITY 0F', 'OITY 0F', 'DITY 0F', 'QITY 0F',
+                    'ClTY 0F', 'SlTY 0F', 'OlTY 0F', 'DlTY 0F', 'QlTY 0F',]
+            voters_issuance_date_field_pattern = [
+                    'Date Issued : ', 'Date Issued ; ', 'Date Issued . ', 
+                    'Dote Issued : ', 'Dote Issued ; ', 'Dote Issued . ', 
+                    'Date lssued : ', 'Date lssued ; ', 'Date lssued . ', 
+                    'Dote lssued : ', 'Dote lssued ; ', 'Dote lssued . ', 
+                    'Dale Issued : ', 'Dale Issued ; ', 'Dale Issued . ', 
+                    'Dale lssued : ', 'Dale lssued ; ', 'Dale lssued . ', 
+                    'Dole Issued : ', 'Dole Issued ; ', 'Dole Issued . ', 
+                    'Dole lssued : ', 'Dole lssued ; ', 'Dole lssued . ', 
+                    'Oate Issued : ', 'Oate Issued ; ', 'Oate Issued . ', 
+                    'Oate lssued : ', 'Oate lssued ; ', 'Oate lssued . ', 
+                    'Oale Issued : ', 'Oale Issued ; ', 'Oale Issued . ', 
+                    'Oale lssued : ', 'Oale lssued ; ', 'Oale lssued . ', 
+                    'Oote Issued : ', 'Oote Issued ; ', 'Oote Issued . ', 
+                    'Oote lssued : ', 'Oote lssued ; ', 'Oote lssued . ', 
+                    'Oole Issued : ', 'Oole Issued ; ', 'Oole Issued . ', 
+                    'Oole lssued : ', 'Oole lssued ; ', 'Oole lssued . ', ]
+            
+            # Appending Section
+            # Iterate through the field patterns and their associated patterns
+            for pattern in residency_field_pattern:
+                match = re.search(f"{pattern}{residency_pattern}", image_to_text, flags=re.DOTALL)
+
+                if match:
+                    extracted_guardian_info['guardians_years_of_residency'] = match.group(1).strip()
+                    break
+                
+            for pattern in voters_issued_at_field_pattern:
+                match = re.search(f"{pattern}{voters_issued_at_pattern}", image_to_text, flags=re.DOTALL)
+
+                if match:
+                    extracted_guardian_info['guardians_voters_issued_at'] = match.group(1).strip()
+                    break
+            
+            for pattern in voters_issuance_date_field_pattern:
+                match = re.search(f"{pattern}{voters_issuance_date_pattern}", image_to_text, flags=re.DOTALL)
+
+                if match:
+                    extracted_guardian_info['guardians_voters_issuance_date'] = match.group(1).strip()
+                    break
+
+            return extracted_guardian_info
+        
+        else:
+            logging.error(f'Failed to read image')
+            return None
+    else:
+        logging.error('voters_certificate is not a File object')
+        return None
 

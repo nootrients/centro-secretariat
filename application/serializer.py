@@ -27,11 +27,14 @@ class ApplicationsSerializer(serializers.ModelSerializer):
     firstname = serializers.CharField(write_only=True, allow_blank=True, required=False)
     middlename = serializers.CharField(write_only=True, allow_blank=True, required=False)
 
-
-    # Comment out for demonstration || CONTINUE AFTER
     years_of_residency = serializers.CharField(write_only=True, allow_blank=True, required=False)
     voters_issued_at = serializers.CharField(write_only=True, allow_blank=True, required=False)
     voters_issuance_date = serializers.CharField(write_only=True, allow_blank=True, required=False)
+
+    # Guardian's Voter's Certificate Validation Fields
+    guardians_years_of_residency = serializers.CharField(write_only=True, allow_blank=True, required=False)
+    guardians_voters_issued_at = serializers.CharField(write_only=True, allow_blank=True, required=False)
+    guardians_voters_issuance_date = serializers.CharField(write_only=True, allow_blank=True, required=False)
     
     gender = serializers.PrimaryKeyRelatedField(
         queryset=Gender.objects.all(),
@@ -55,10 +58,24 @@ class ApplicationsSerializer(serializers.ModelSerializer):
         print("Creating Application with data:", validated_data)
 
         # Extract and decode the base64_content
-        base64_content = validated_data.pop('base64_content', None)
-        if base64_content:
-            binary_content = base64.b64decode(base64_content)
-            validated_data['national_id'] = ContentFile(binary_content, name='national_id.jpg')
+        id_base64_content = validated_data.pop('national_id_content', None)
+        icg_base64_content = validated_data.pop('informative_copy_of_grades_content', None)
+        applicant_voters_base64_content = validated_data.pop('voter_certificate_content', None)
+        registration_form_base64_content = validated_data.pop('registration_form_content', None)
+        guardian_voters_base64_content = validated_data.pop('guardians_voter_certificate_content', None)
+        
+        if id_base64_content:
+            id_binary_content = base64.b64decode(id_base64_content)
+            icg_binary_content = base64.b64decode(icg_base64_content)
+            applicant_voters_binary_content = base64.b64decode(applicant_voters_base64_content)
+            registration_form_binary_content = base64.b64decode(registration_form_base64_content)
+            guardian_voters_binary_content = base64.b64decode(guardian_voters_base64_content)
+
+            validated_data['national_id'] = ContentFile(id_binary_content, name='national_id.jpg')
+            validated_data['informative_copy_of_grades'] = ContentFile(icg_binary_content, name='informative_copy_of_grades.pdf')
+            validated_data['voter_certificate'] = ContentFile(applicant_voters_binary_content, name='applicant_votersCert.jpg')
+            validated_data['registration_form'] = ContentFile(registration_form_binary_content, name='registration_form.pdf')
+            validated_data['guardians_voter_certificate'] = ContentFile(guardian_voters_binary_content, name='guardians_votersCert.jpg')
 
         # Create and return the Applications object
         return super(ApplicationsSerializer, self).create(validated_data)

@@ -195,7 +195,6 @@ class Applications(models.Model):
     
 
 # EDUCATIONAL BACKGROUND
-    '''
     # Elementary
     elementary_school = models.CharField(max_length=50, null=True, blank=False)
     elementary_school_type = models.CharField(max_length=10, choices=SchoolType.choices, null=True, blank=False)
@@ -223,16 +222,16 @@ class Applications(models.Model):
     guardian_place_of_work = models.TextField(max_length=30, null=True, blank=False)
     guardian_educational_attainment = models.CharField(max_length=30, null=True, blank=False)
 
-    guardians_voter_certificate = models.FileField(upload_to='guardian/voters_certificate', null=True, blank=False, help_text="Insert your guardian's voter certificate (for verification and validation purposes).")
-    guardians_years_of_residency = models.PositiveSmallIntegerField(null=True, blank=False)
+    guardians_voter_certificate = models.FileField(upload_to='guardian/voters_certificate', null=True, blank=False, help_text="Insert your SCANNED COPY (IMG) guardian's voter certificate (for verification and validation purposes).")
+    guardians_years_of_residency = models.CharField(max_length = 30, null=True, blank=False)
+    guardians_voters_issued_at = models.CharField(max_length=70, null=True, blank=True)
+    guardians_voters_issuance_date = models.CharField(max_length=70, null=True, blank=True)
 
-# MISCELLANEOUS INFORMATION    
+# MISCELLANEOUS INFORMATION
     number_of_semesters_before_graduating = models.PositiveSmallIntegerField(null=True, blank=False)
-    
     transferee = models.CharField(max_length=50, null=True, default='N/A', blank=False, help_text="Name of your previous school/university.")
     shiftee = models.CharField(max_length=30, null=True, default='N/A', blank=False, help_text="Title of your previous course (if shiftee).")
-
-    student_status = models.CharField(max_length=20, choices=StudentStatus.choices, null=True, blank=False)'''
+    student_status = models.CharField(max_length=20, choices=StudentStatus.choices, null=True, blank=False)
     
 
 # UTILITIES SECTION
