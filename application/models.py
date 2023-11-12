@@ -36,6 +36,10 @@ class Courses(models.Model):
         return self.course_name
 
 
+class ApplicationStatus(models.Model):
+    status_name = models.CharField(max_length=50, null=False, blank=False)
+
+
 class Applications(models.Model):
     class Barangay(models.TextChoices):
         """
@@ -140,9 +144,9 @@ class Applications(models.Model):
     national_id = models.ImageField(upload_to='applicant/ids', null=True, blank=False)
     
     # Auto generated from the scanned National ID
-    lastname = models.CharField(max_length=30, null=True, blank=True)
-    firstname = models.CharField(max_length=30, null=True, blank=True)
-    middlename = models.CharField(max_length=30, null=True, blank=True)          
+    lastname = models.CharField(max_length=30, null=True, blank=True, default="Unable to extract from image.")
+    firstname = models.CharField(max_length=30, null=True, blank=True, default="Unable to extract from image.")
+    middlename = models.CharField(max_length=30, null=True, blank=True, default="Unable to extract from image.")          
     
     gender = models.ForeignKey(Gender, on_delete=models.CASCADE, null=True, blank=False)                                    
 
@@ -224,8 +228,8 @@ class Applications(models.Model):
 
     guardians_voter_certificate = models.FileField(upload_to='guardian/voters_certificate', null=True, blank=False, help_text="Insert your SCANNED COPY (IMG) guardian's voter certificate (for verification and validation purposes).")
     guardians_years_of_residency = models.CharField(max_length = 30, null=True, blank=False)
-    guardians_voters_issued_at = models.CharField(max_length=70, null=True, blank=True)
-    guardians_voters_issuance_date = models.CharField(max_length=70, null=True, blank=True)
+    guardians_voters_issued_at = models.CharField(max_length=70, null=True, blank=False)
+    guardians_voters_issuance_date = models.CharField(max_length=70, null=True, blank=False)
 
 # MISCELLANEOUS INFORMATION
     number_of_semesters_before_graduating = models.PositiveSmallIntegerField(null=True, blank=False)
@@ -243,7 +247,7 @@ class Applications(models.Model):
     
     approved_by = models.ForeignKey(Officer, on_delete=models.CASCADE, null=True, blank=True)
 
-    # ADD `STATUS` FOR LOGGING/TRACKING
+    status = models.ForeignKey(ApplicationStatus, on_delete=models.CASCADE, null=False, blank=False, default=1)
 
     @property
     def calculate_age(self):

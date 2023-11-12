@@ -174,7 +174,7 @@ class UserProfile(models.Model):
     lastname = models.CharField(max_length=30)
     middlename = models.CharField(max_length=30)
 
-    gender = models.ForeignKey(Gender, on_delete=models.CASCADE, default=3)
+    gender = models.ForeignKey(Gender, on_delete=models.CASCADE, default=1)
     
     contactnumber = models.CharField(max_length=11)
     
