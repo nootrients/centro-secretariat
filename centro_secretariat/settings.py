@@ -217,3 +217,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media') # new
 
 DJANGO_EASY_AUDIT_WATCH_AUTH_EVENTS = False
 DJANGO_EASY_AUDIT_WATCH_REQUEST_EVENTS = False
+
+# Message broker to communicate with Celery (for background tasks/automation)
+# Communicate with tasks.py under the `application` app
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
