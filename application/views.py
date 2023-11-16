@@ -437,8 +437,6 @@ class EligibleApplicationDetailAPIView(RetrieveUpdateAPIView):
 
             message.attach_alternative(html_message, "text/html")
             message.send()
-
-        serializer = self.get_serializer(instance)
         
         view_eligible_applications_list_url = reverse('view-eligible-applications-list')
         return redirect(view_eligible_applications_list_url)
