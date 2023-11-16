@@ -1,25 +1,33 @@
 from django.db.models import Q
-from django.shortcuts import redirect
+from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse
 
 from rest_framework.generics import CreateAPIView, ListAPIView, RetrieveAPIView, RetrieveUpdateAPIView
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
+from rest_framework.decorators import action
 
 from django_filters.rest_framework import DjangoFilterBackend
 from django.core.files.base import ContentFile
 from datetime import datetime
 import django_filters, base64, uuid
 
-from rest_framework import permissions, status, generics
+from rest_framework import permissions, status, generics, viewsets
 from accounts.permissions import IsOfficer, IsHeadOfficer
 
 from .models import Applications, EligibilityConfig
-from .serializer import ApplicationsSerializer, EligibleApplicationsSerializer, EligibilityConfigSerializer
+from .serializer import ApplicationsSerializer, EligibleApplicationsSerializer, EligibilityConfigSerializer, ApplicationRetrieveUpdateSerializer
 from .image_processing import extract_id_info, extract_applicant_voters, extract_guardian_voters
 
-from demographics.serializer import GenderSerializer
+from .tasks import check_eligibility
+
+# For sending custom email
+from django.core.mail import send_mail, EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+
+from django.contrib.auth import get_user_model
 
 
 # Constants
@@ -45,10 +53,11 @@ class ApplicationForm(CreateAPIView):
     Endpoint for posting/submitting a Scholarship Application.
     """
 
+    parser_classes = [MultiPartParser, FormParser]
     permission_classes = [permissions.AllowAny]
     serializer_class = ApplicationsSerializer
 
-    def post(self, request, format=None):
+    def post(self, request, *args, **kwargs):
         serializer = ApplicationsSerializer(data=request.data)
         response_data = {'status': 'error', 'message': 'Data processing failed.'} # new
 
@@ -59,6 +68,7 @@ class ApplicationForm(CreateAPIView):
             request.session['temp_data'] = {}                              # Initialize session for storing temp_data
 
             request.session['temp_data'] = {                               # Store all form data in temp_data
+                'application_reference_id': data['application_reference_id'],     # new
             # Personal Information Section
                 'national_id_name': data['national_id'].name,
                 'national_id_content': data['national_id'].read(),
@@ -204,6 +214,7 @@ class ReviewAndProcessView(APIView):
 
         if id_base64_content and icg_base64_content and applicant_voters_base64_content and registration_form_base64_content and guardian_voters_base64_content:
             applications_data = {
+                'application_reference_id': temp_data.get('application_reference_id'),                          # New
             # Personal Information Section
                 'national_id': id_base64_content,
                 'lastname': temp_data.get('lastname'),
@@ -315,6 +326,33 @@ class ReviewAndProcessView(APIView):
             print(serializer.validated_data)
             serializer.save()
 
+            # Send email after saving the instance
+            context = {
+                "firstname": serializer.validated_data.get('firstname'),
+                "lastname": serializer.validated_data.get('lastname'),
+                "application_reference_id": serializer.validated_data.get('application_reference_id')
+            }
+
+            html_message = render_to_string("content/application_received_email.html", context=context)
+            plain_message = strip_tags(html_message)
+
+            message = EmailMultiAlternatives(
+                subject = "Scholarship Application",
+                body = plain_message,
+                from_email = None,
+                to = [serializer.data.get('email_address'),]
+            )
+
+            message.attach_alternative(html_message, "text/html")
+            message.send()
+
+            # Initiate Automated Eligibility Checking
+            # Get the application ID after saving
+            application_id = serializer.data.get('id')
+
+            # Trigger Celery task for eligibility checking asynchronously
+            check_eligibility.apply_async(args=[application_id])
+
             response_data = {
                 'status': 'success',
                 'message': 'Data has been successfully updated and saved to the database.',
@@ -338,14 +376,15 @@ class EligibleApplicationsFilter(django_filters.FilterSet):
         }
 
 
-class EligibleApplicationsList(ListAPIView):
+#class EligibleApplicationsList(ListAPIView):
+class EligibleApplicationsListAPIView(ListAPIView):
     """
     Endpoint for LISTING all the `ELIGIBLE` scholarship applications.
     """
-
+    # OLD CODE
     permission_classes = [permissions.IsAdminUser | IsOfficer]
 
-    queryset = Applications.objects.filter(is_eligible=True)
+    queryset = Applications.objects.filter(is_eligible=True, is_approved=False, approved_by=None)
     serializer_class = EligibleApplicationsSerializer
 
     filter_backends = [DjangoFilterBackend]
@@ -354,36 +393,52 @@ class EligibleApplicationsList(ListAPIView):
     template = 'rest_framework/filters/base.html'
 
 
-class EligibleNewApplicationsList(ListAPIView):
-    """
-    Endpoint for LISTING all the 'ELIGIBLE` and `NEW` scholarship applications.
-    """
-    
+class EligibleApplicationDetailAPIView(RetrieveUpdateAPIView):
     permission_classes = [permissions.IsAdminUser | IsOfficer]
-
-    queryset = Applications.objects.filter(Q(is_eligible=True) & Q(applicant_status='NEW_APPLICANT'))
-    serializer_class = EligibleApplicationsSerializer
-
-
-class EligibleRenewingApplicationsList(ListAPIView):
-    """
-    Endpoint for LISTING all the 'ELIGIBLE` and `RENEWING` scholarship applications.
-    """
-    
-    permission_classes = [permissions.IsAdminUser | IsOfficer]
-
-    queryset = Applications.objects.filter(Q(is_eligible=True) & Q(applicant_status='RENEWING_APPLICANT'))
-    serializer_class = EligibleApplicationsSerializer
-
-
-class ApplicationDetailView(RetrieveUpdateAPIView):
-    """
-    Endpoint for RETRIEVING a specific scholarship application.
-    """
-
-    permission_classes = [IsOfficer]
-
     queryset = Applications.objects.all()
-    serializer_class = ApplicationsSerializer
+    serializer_class = ApplicationRetrieveUpdateSerializer
+    lookup_field = 'application_reference_id'
 
-    lookup_field = 'application_uuid'
+    def get_object(self):
+        application_reference_id = self.kwargs.get('application_reference_id')
+        return get_object_or_404(Applications, application_reference_id=application_reference_id)
+    
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        is_approved = request.data.get('is_approved', False)
+
+        if is_approved:
+            officer_instance = get_user_model().objects.get(pk=request.user.id)
+            instance.is_approved = True
+            instance.approved_by = officer_instance
+            instance.save()
+
+            officer_profile = officer_instance.profile
+
+            # Send email after saving the instance
+            context = {
+                "firstname": instance.firstname,
+                "lastname": instance.lastname,
+                "application_reference_id": instance.application_reference_id,
+                "officer_firstname": officer_profile.firstname,
+                "officer_lastname": officer_profile.lastname,
+                "officer_instance_email": officer_instance.email
+            }
+
+            html_message = render_to_string("content/application_approved_email.html", context=context)
+            plain_message = strip_tags(html_message)
+
+            message = EmailMultiAlternatives(
+                subject = "Scholarship Application",
+                body = plain_message,
+                from_email = None,
+                to = [instance.email_address, ]
+            )
+
+            message.attach_alternative(html_message, "text/html")
+            message.send()
+
+        serializer = self.get_serializer(instance)
+        
+        view_eligible_applications_list_url = reverse('view-eligible-applications-list')
+        return redirect(view_eligible_applications_list_url)

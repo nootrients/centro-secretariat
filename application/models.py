@@ -135,10 +135,8 @@ class Applications(models.Model):
         IRREGULAR = "IRREGULAR", "IRREGULAR"
         OCTOBERIAN = "OCTOBERIAN", "OCTOBERIAN"
     
-
-    application_uuid = models.UUIDField(primary_key=False, default=uuid.uuid4, editable=False)
-
-
+    # Generate from front-end
+    application_reference_id = models.CharField(max_length=20, null=True, blank=False)
 
 #PERSONAL INFORMATION SECTION
     national_id = models.ImageField(upload_to='applicant/ids', null=True, blank=False)
@@ -247,7 +245,7 @@ class Applications(models.Model):
     
     approved_by = models.ForeignKey(Officer, on_delete=models.CASCADE, null=True, blank=True)
 
-    status = models.ForeignKey(ApplicationStatus, on_delete=models.CASCADE, null=False, blank=False, default=1)
+    #status = models.ForeignKey(ApplicationStatus, on_delete=models.CASCADE, null=False, blank=False, default=1)
 
     @property
     def calculate_age(self):
@@ -307,6 +305,8 @@ class Applications(models.Model):
         # Call the parent class's delete method to delete the database record
         super(Applications, self).delete(*args, **kwargs)
 
+    def __str__(self):
+        return self.application_reference_id
 
 class EligibilityConfig(models.Model):
     class Semester(models.TextChoices):
@@ -315,6 +315,9 @@ class EligibilityConfig(models.Model):
     
     applying_for_academic_year = AcademicYearField()
     semester = models.CharField(max_length=50, null=False, blank=False, choices=Semester.choices, default=Semester.FIRST_SEMESTER)
+    
     minimum_residency = models.PositiveSmallIntegerField(null=False, blank=False, default=3)
+    guardians_minimum_residency = models.PositiveSmallIntegerField(null=False, blank=False, default=3)
+    
     voters_validity_year_start = models.PositiveSmallIntegerField(null=True, blank=False)
     voters_validity_year_end = models.PositiveSmallIntegerField(null=True, blank=False)

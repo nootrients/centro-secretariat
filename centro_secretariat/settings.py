@@ -45,6 +45,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_filters',
     'easyaudit',
+    'django_celery_results',
+    'django_celery_beat',
     # local
     "index",
     "demographics",
@@ -220,4 +222,32 @@ DJANGO_EASY_AUDIT_WATCH_REQUEST_EVENTS = False
 
 # Message broker to communicate with Celery (for background tasks/automation)
 # Communicate with tasks.py under the `application` app
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379'
+
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_BACKEND = 'django-db'
+
+# CELERY BEAT SCHEDULER
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
+# REDIS CACHE
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": f"redis://127.0.0.1:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+    }
+}
+
+# EMAIL SETTINGS
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = "Centro Secretariat"
+EMAIL_HOST_USER = os.environ.get("CAPSTONE_EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.environ.get("CAPSTONE_EMAIL_HOST_PASSWORD")

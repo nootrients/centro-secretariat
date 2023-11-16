@@ -86,16 +86,89 @@ class EligibleApplicationsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Applications
-        fields = '__all__'
+        fields = (
+            'application_reference_id',
+            'lastname',
+            'firstname',
+            'middlename',
+            'email_address',
+            'semester',
+            'applicant_status',
+            'scholarship_type',
+        )
 
 
 # Change to something else, RetrieveUpdate should be used for retrieval of application in the applicant's side
 class ApplicationRetrieveUpdateSerializer(serializers.ModelSerializer):
     """Serializer for retrieving and approving/rejecting an eligible scholarship application."""
-    
+    is_approved = serializers.BooleanField(write_only=True)
+    approved_by = serializers.CharField(write_only=True, required=False)
+
     class Meta:
         model = Applications
-        fields = ['is_approved']
+        fields = '__all__'
+        read_only_fields = (
+            'application_reference_id',
+            'national_id',
+            'lastname',
+            'firstname',
+            'middlename',
+            'birthdate',
+            'house_address',
+            'barangay',
+            'district',
+            'email_address',
+            'personalized_facebook_link',
+            'religion',
+            'applicant_status',
+            'scholarship_type',
+            'applying_for_academic_year',
+            'semester',
+            'informative_copy_of_grades',
+            'is_applying_for_merit',
+            'voter_certificate',
+            'years_of_residency',
+            'voters_issued_at',
+            'voters_issuance_date',
+            'registration_form',
+            'total_units_enrolled',
+            'is_ladderized',
+            'year_level',
+            'is_graduating',
+            'course_duration',
+            'elementary_school',
+            'elementary_school_type',
+            'elementary_school_address',
+            'elementary_start_end',
+            'jhs_school',
+            'jhs_school_type',
+            'jhs_school_address',
+            'jhs_start_end',
+            'shs_school',
+            'shs_school_type',
+            'shs_school_address',
+            'shs_start_end',
+            'guardian_complete_name',
+            'guardian_complete_address',
+            'guardian_contact_number',
+            'guardian_occupation',
+            'guardian_place_of_work',
+            'guardian_educational_attainment',
+            'guardians_voter_certificate',
+            'guardians_years_of_residency',
+            'guardians_voters_issued_at',
+            'guardians_voters_issuance_date',
+            'number_of_semesters_before_graduating',
+            'transferee',
+            'shiftee',
+            'student_status',
+            'is_eligible',
+            'created_at',
+            'updated_at',
+            'gender',
+            'university_attending',
+            'course_taking',
+        )
 
 
 class ReviewFormSerializer(serializers.Serializer):
