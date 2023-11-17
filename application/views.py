@@ -186,8 +186,8 @@ class ApplicationForm(CreateAPIView):
                     'message': 'Data has been successfully processed and temporarily stored.',
                 }
 
-                review_and_process_url = reverse('review-and-process')
-                return redirect(review_and_process_url)
+                # review_and_process_url = reverse('review-and-process')
+                # return redirect(review_and_process_url)
             
             return Response(response_data, status=status.HTTP_200_OK)
         
@@ -438,5 +438,13 @@ class EligibleApplicationDetailAPIView(RetrieveUpdateAPIView):
             message.attach_alternative(html_message, "text/html")
             message.send()
         
-        view_eligible_applications_list_url = reverse('view-eligible-applications-list')
-        return redirect(view_eligible_applications_list_url)
+        if instance.applicant_status == "NEW APPLICANT":
+            # Call account generation
+            pass
+
+        response_data = {
+            'status': 'success',
+            'message': 'Scholarship application has been successfully approved.',
+        }
+            
+        return Response(response_data, status=status.HTTP_200_OK)
