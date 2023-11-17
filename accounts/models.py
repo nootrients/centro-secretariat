@@ -78,7 +78,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     # base_role = Role.ADMIN
 
-    role = models.CharField(max_length=20, choices=Role.choices, default=Role.ADMIN)
+    role = models.CharField(max_length=20, choices=Role.choices, default=Role.SCHOLAR)
     username = models.CharField(_("username"), max_length=12, blank=True, unique=True)
     email = models.EmailField(_("email address"), blank=False, unique=True)
     is_active = models.BooleanField(default=True)

@@ -21,6 +21,7 @@ from .serializer import ApplicationsSerializer, EligibleApplicationsSerializer, 
 from .image_processing import extract_id_info, extract_applicant_voters, extract_guardian_voters
 
 from .tasks import check_eligibility
+from accounts.tasks import supply_account
 
 # For sending custom email
 from django.core.mail import send_mail, EmailMultiAlternatives
@@ -439,8 +440,7 @@ class EligibleApplicationDetailAPIView(RetrieveUpdateAPIView):
             message.send()
         
         if instance.applicant_status == "NEW APPLICANT":
-            # Call account generation
-            pass
+            supply_account.apply_async(args=[instance.id])
 
         response_data = {
             'status': 'success',

@@ -1,6 +1,6 @@
 from celery import shared_task
 from application.models import Applications, EligibilityConfig
-from accounts.utils import generate_random_password
+
 
 from datetime import datetime
 
@@ -140,12 +140,3 @@ def check_eligibility(application_id):
 
     application.is_eligible = eligibility_status
     application.save()
-
-
-@shared_task
-def supply_account(application_id):
-    application = Applications.objects.get(id=application_id)
-
-    Scholar = get_user_model()
-
-    password = generate_random_password()
