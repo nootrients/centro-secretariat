@@ -18,7 +18,7 @@ from django.utils import timezone
 
 from datetime import date, datetime, timedelta
 
-from demographics.models import Gender, ScholarshipType
+from demographics.models import Gender
 
 
 class CustomUserManager(BaseUserManager):
@@ -176,7 +176,7 @@ class UserProfile(models.Model):
 
     gender = models.ForeignKey(Gender, on_delete=models.CASCADE, default=1)
     
-    contactnumber = models.CharField(max_length=11)
+    # contactnumber = models.CharField(max_length=11)
     
     house_address = models.CharField(max_length=50)
     barangay = models.CharField(max_length=50, null=True, choices=Barangay.choices)
@@ -277,15 +277,11 @@ def create_user_profile(sender, instance, created, **kwargs):
 
 
 class ScholarProfile(UserProfile):
-
-    religion = models.CharField(max_length=30, blank=True)
-    facebook_link = models.CharField(max_length=100, blank=True)
-    years_of_residency = models.PositiveSmallIntegerField(null=False, default=6)
-    scholarship_type = models.ForeignKey(ScholarshipType, on_delete=models.CASCADE, null=False, default=5)
+    years_of_residency = models.CharField(max_length = 30, null=True, blank=False)
+    scholarship_type = models.CharField(max_length=20, null=True, blank=False,)
 
     # Determine if the applicant has already graduated
-    is_graduated = models.BooleanField(null=False, default=False)                                        
-    is_archived = models.BooleanField(null=False, default=False)
+    is_graduating = models.BooleanField(null=False, default=False)                                        
     
     def __str__(self):
         return f"{self.user.username}'s Profile"

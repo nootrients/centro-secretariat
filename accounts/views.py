@@ -10,7 +10,7 @@ from django.contrib.auth.models import Group
 from accounts.models import CustomUser, Head, Officer, Scholar
 from accounts.models import UserProfile, HeadProfile, OfficerProfile, ScholarProfile
 
-from accounts.serializers import AccountSerializer, AccountDetailSerializer, HeadSerializer, OfficerSerializer, ScholarSerializer, RegisterUserSerializer
+from accounts.serializers import AccountSerializer, AccountDetailSerializer, HeadSerializer, OfficerSerializer, ScholarSerializer, RegisterUserSerializer, ChangePasswordSerializer
 from accounts.serializers import UserProfileSerializer, HeadProfileSerializer, OfficerProfileSerializer, ScholarProfileSerializer
 
 from accounts.permissions import IsLinkedUser, IsHeadOfficer, IsAdminOfficer, IsSelfOrAdminUser
@@ -22,7 +22,7 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.views import APIView
 from rest_framework import generics
 
-from rest_framework.permissions import IsAdminUser, DjangoModelPermissions
+from rest_framework.permissions import IsAdminUser, DjangoModelPermissions, IsAuthenticated
 
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -96,45 +96,6 @@ class AccountList(generics.ListAPIView):
         self.check_object_permissions(self.request, obj)
 
         return obj
-    
-    """
-    @action(detail=False, methods=['POST'])
-    def create_user(self, request):
-        
-        #Allows the superuser to manually `CREATE` a user. 
-        #There is no need to specify an entry for the field `Username` as it is automatically generated and formatted.
-        
-        if request.method == 'POST':
-            # Assuming you have a JSON request data with a "password" and "role" field
-            password = request.data.get('password')
-            role = request.data.get('role')
-            email = request.data.get('email')
-
-            # Hash the password
-            hashed_password = make_password(password)
-
-            # Create and save the user with the hashed password
-            user = CustomUser(username=request.data.get('username'), password=hashed_password, email=email, role=role)
-            user.set_password(password)
-            user.save()
-
-            return Response({'message': 'User created successfully'}, status=status.HTTP_201_CREATED)
-        
-    @action(detail=False, methods=['GET'])
-    def get_users_by_role(self, request):
-        role = request.query_params.get('role', None)  # Get the 'role' parameter from the request || :8000/accounts/users/get_user_by_role/?role=OFFICER
-
-        if role is not None:
-            # Filter users by role
-            users = CustomUser.objects.filter(role=role)
-            serializer = AccountSerializer(users, many=True)
-            return Response(serializer.data)
-        else:
-            return Response(
-                {'detail': 'Please provide a role parameter in the request'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-    """
             
 
 class CreateOfficer(generics.CreateAPIView):
@@ -161,11 +122,28 @@ class CreateOfficer(generics.CreateAPIView):
 class UserProfileDetail(generics.RetrieveUpdateAPIView):
 
     permission_classes = [IsLinkedUser]
-    serializer_class = UserProfileSerializer
+    
+    def get_serializer_class(self):
+        # Get the role of the user making the request
+        user_role = self.request.user.role
+
+        # Choose the serializer based on the user's role
+        if user_role == CustomUser.Role.HEAD or user_role == CustomUser.Role.OFFICER:
+            return UserProfileSerializer
+        elif user_role == CustomUser.Role.SCHOLAR:
+            return ScholarProfileSerializer
 
     def get_object(self):
         # Get the user profile of the currently logged-in user
         return self.request.user.profile
+    
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        
+        serializer_class = self.get_serializer_class()
+        serializer = serializer_class(instance)
+        
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class HeadProfileDetail(AllowPUTAsCreateMixin, generics.RetrieveUpdateAPIView, IsLinkedUser):
@@ -222,11 +200,6 @@ class AccountDetailView(generics.RetrieveUpdateAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = AccountDetailSerializer
     lookup_field = 'username'
-
-    """
-    def get_object(self):
-        return self.request.user  # Get the currently logged-in user's account"""
-
     
     def get_object(self):
         username = self.kwargs.get('username')
@@ -254,8 +227,28 @@ class AccountDetailView(generics.RetrieveUpdateAPIView):
         return Response({'message': 'User updated successfully.'}, status=status.HTTP_200_OK)
 
 
-# One Login module for all types of Users
-# POST - UID and Password
+class ChangePasswordAPIView(generics.UpdateAPIView):
+    """
+    Endpoint for changing the logged in user instance's password.
+    """
 
-def login(request):
-    return HttpResponse('<div style="text-align:center"><h1>Login Page</h1></div>')
+    permission_classes = [IsAuthenticated, ]
+    
+    serializer_class = ChangePasswordSerializer
+
+    def update(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        old_password = serializer.validated_data.get('old_password')
+        new_password = serializer.validated_data.get('new_password')
+
+        # Check if old_password's value matches with the current password of the user instance.
+        if not request.user.check_password(old_password):
+            return Response({'detail': 'Old password is incorrect.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Change password
+        request.user.set_password(new_password)
+        request.user.save()
+
+        return Response({'detail': 'Password changed successfully.'}, status=status.HTTP_200_OK)

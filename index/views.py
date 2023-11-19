@@ -1,62 +1,95 @@
-from django.http import HttpResponse
-from django.shortcuts import render
+from rest_framework import permissions, generics, status
+from rest_framework.response import Response
+
+from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import default_token_generator
+
+from django.utils import timezone
+from django.urls import reverse
+
+from .serializers import PasswordResetSerializer, PasswordResetConfirmSerializer
+from .models import PasswordReset
+
+from django.core.mail import send_mail, EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 
 
-# Create your views here.
-def index(request):
-    return HttpResponse('<div style="text-align:center"><h1>Main Homepage</h1></div>')
+class PasswordResetView(generics.CreateAPIView):
+    """
+    Endpoint for `Forgot Password`.
+    Enables all the existing users to reset their password.
+    """
+
+    permission_classes = [permissions.AllowAny, ]
+    serializer_class = PasswordResetSerializer
+
+    def create(self, request, *args, **kwargs):
+        # Get email and retrieve the user with the given email
+        email = self.request.data.get('email')
+        user_model = get_user_model()
+        user = user_model.objects.filter(email=email).first()
+
+        print(user)
+        print(email)
+
+        # Generate a unique token
+        token = default_token_generator.make_token(user)
+
+        # Save the token in the database along with the user and expiration date
+        reset_instance = PasswordReset.objects.create(
+            user = user,
+            token = token,
+            expires_at = timezone.now() + timezone.timedelta(hours=1)
+        )
+
+        # Generate link for resetting password (with the token included)
+        reset_url = reverse('forgot-password-confirm')
+        reset_link = f"{self.request.build_absolute_uri(reset_url)}?token={token}"
+
+        # Send email
+        context = {
+            "link": reset_link
+        }
+
+        html_message = render_to_string("content/forgot_password_email.html", context=context)
+        plain_message = strip_tags(html_message)
+
+        message = EmailMultiAlternatives(
+            subject = "Password Reset",
+            body = plain_message,
+            from_email = None,
+            to = [email,]
+        )
+
+        message.attach_alternative(html_message, "text/html")
+        message.send()
+
+        return Response({'message': 'Link for password reset request sent successfully'}, status=status.HTTP_200_OK)
 
 
-def about_page(request):
-    return HttpResponse('<div style="text-align:center"><h1>About Page</h1></div>')
+class PasswordResetConfirmView(generics.CreateAPIView):
+    """
+    Endpoint for setting the new password after password reset request.
+    """
 
+    permission_classes = [permissions.AllowAny, ]
+    serializer_class = PasswordResetConfirmSerializer
 
-def guidelines_page(request):
-    return HttpResponse('<div style="text-align:center"><h1>Guidelines Page</h1></div>')
+    def create(self, request, *args, **kwargs):
+        token = self.request.query_params.get('token')                              # Get token from request
+        password_reset = PasswordReset.objects.filter(token=token).first()          # Retrieve PasswordReset instance
 
+        if not password_reset or password_reset.expires_at < timezone.now():
+            return Response({'error': 'Invalid or expired token'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Have new_password field in the front-end/request
+        new_password = self.request.data.get('new_password')
 
-# [Client] Scholar Application Page
-# Views Object that presents the different choices and/or operations under the subject of Scholarship Application
-def application_index(request):
-    return HttpResponse(
-        '<div style="text-align:center"><h1>Scholar Application Page</h1></div>'
-    )
+        user = password_reset.user
+        user.set_password(new_password)
+        user.save()
 
+        password_reset.delete()                                                     # Delete the PasswordReset instance to invalidate the token
 
-# [Client] Policy Procedure Page
-# Invoked upon the start of an application
-def policy_procedure(request):
-    return HttpResponse(
-        '<div style="text-align:center"><h1>Policy Procedure Page</h1></div>'
-    )
-
-
-"""
-# [Client] Load / Retrieve Scholarship Application
-def load_application(request):
-    # Call Retrieval Form
-    # POST - Application ID, Security Question Answer
-    # GET - Security Question
-
-    # Restore Application State (where Client left off)
-    return HttpResponse("<div style=\"text-align:center\"><h1>Application Retrieval Form</h1></div>")    
-"""
-
-
-# [Client] Tracking Application Page
-# POST - Application ID
-# GET - Logs
-def track_application(request):
-    return HttpResponse(
-        '<div style="text-align:center"><h1>Scholarship Application Tracking Form</h1></div>'
-    )
-    # Call Tracking Details page
-
-
-# [Client] Client Satisfaction Survey
-# POST - Application ID, Answers, and Comments (Optional)
-def evaluation_survey(request):
-    return HttpResponse(
-        '<div style="text-align:center"><h1>Client Satisfaction Survey Page</h1></div>'
-    )
-    # After recording the response, return to index page together with a notification modal.
+        return Response({'message': 'Password reset successful'}, status=status.HTTP_200_OK)

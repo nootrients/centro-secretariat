@@ -88,18 +88,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
-        fields = (
-            "user",
-            "firstname",
-            "lastname",
-            "middlename",
-            "contactnumber",
-            "house_address",
-            "barangay",
-            "district",
-            "birthdate",
-            "age"
-        )
+        fields = '__all__'
         read_only_fields = ['user', 'district']
 
     age = serializers.SerializerMethodField()
@@ -118,19 +107,7 @@ class HeadProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = HeadProfile
-        fields = (
-            "user",
-            "firstname",
-            "lastname",
-            "middlename",
-            "gender",
-            "contactnumber",
-            "house_address",
-            "barangay",
-            "district",
-            "birthdate",
-            "age"
-        )
+        fields = '__all__'
         read_only_field = ("user", "district")
 
     age = serializers.SerializerMethodField()
@@ -148,19 +125,7 @@ class OfficerProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OfficerProfile
-        fields = (
-            "user",
-            "firstname",
-            "lastname",
-            "middlename",
-            "gender",
-            "contactnumber",
-            "house_address",
-            "barangay",
-            "district",
-            "birthdate",
-            "age"
-        )
+        fields = '__all__'
         read_only_field = ("user", "district")
 
     age = serializers.SerializerMethodField()
@@ -174,24 +139,14 @@ class ScholarProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ScholarProfile
-        fields = (
-            #"user",
-            "firstname",
-            "lastname",
-            "middlename",
-            "gender",
-            "contactnumber",
-            "house_address",
-            "barangay",
+        fields = '__all__'
+        read_only_fields = (
+            "user", 
             "district",
-            "birthdate",
-            "age",
-            "religion",
-            "facebook_link",
             "years_of_residency",
-            "scholarship_type"
+            "scholarship_type",
+            "is_graduating",
         )
-        read_only_field = ("user", "district")
 
     age = serializers.SerializerMethodField()
 
@@ -216,3 +171,14 @@ class RegisterUserSerializer(serializers.ModelSerializer):
         instance.save()
         
         return instance
+    
+
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+    confirm_password = serializers.CharField(required=True)
+
+    def validate(self, data):
+        if data['new_password'] != data['confirm_password']:
+            raise serializers.ValidationError("New password and confirm password must match.")
+        return data

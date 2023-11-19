@@ -277,8 +277,11 @@ def extract_id_info(national_id_content, national_id_name):
                         extracted_info[field_name] = match.group(1).strip()
                         break
             print(f"Image Processing Extracted Info: {extracted_info}")
+
+            img = None
+
             return extracted_info
-        
+
         else:
             logging.error(f'Failed to read image')
             return None
@@ -528,6 +531,8 @@ def extract_applicant_voters(voter_certificate_content, voter_certificate_name):
                 if match:
                     extracted_info['voters_issuance_date'] = match.group(1).strip()
                     break
+            
+            img = None
 
             return extracted_info
         
@@ -778,6 +783,8 @@ def extract_guardian_voters(guardians_voter_certificate_content, guardians_voter
                 if match:
                     extracted_guardian_info['guardians_voters_issuance_date'] = match.group(1).strip()
                     break
+            
+            img = None
 
             return extracted_guardian_info
         

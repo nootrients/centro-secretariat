@@ -8,6 +8,7 @@ from .models import (CustomUser,
                      Head, 
                      Officer,
                      Scholar,
+                     ScholarProfile,
                      UserIdCounter
                      )
 
@@ -15,6 +16,11 @@ from .models import (CustomUser,
 
 class UserProfileInline(admin.StackedInline):
     model = UserProfile
+    can_delete = False
+
+
+class ScholarProfileInline(admin.StackedInline):
+    model = ScholarProfile
     can_delete = False
 
 
@@ -86,7 +92,7 @@ class ScholarAdmin(BaseUserAdmin):
     list_display = ('username', 'email', 'is_staff', 'is_active')
     search_fields = ('email', 'username')
     ordering = ('username', )
-    inlines = (UserProfileInline, )
+    inlines = (ScholarProfileInline, )
 
 
 admin.site.register(UserIdCounter)
