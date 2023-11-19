@@ -1,10 +1,10 @@
 from django.db import models
+from django.utils import timezone
 
 from accounts.models import Officer, Scholar
 from demographics.models import Gender
 
 from datetime import date
-import uuid
 
 # Create your models here.
 class AcademicYearField(models.CharField):
@@ -238,6 +238,8 @@ class Applications(models.Model):
 
 # UTILITIES SECTION
     is_eligible = models.BooleanField(null=False, default=False)
+    expires_at = models.DateTimeField(null=True, blank=False)
+
     is_approved = models.BooleanField(null=False, default=False)
     
     created_at = models.DateTimeField(auto_now_add=True)
@@ -291,6 +293,13 @@ class Applications(models.Model):
             Applications.Barangay.UPPER_BICUTAN: Applications.District.TWO,
             Applications.Barangay.WESTERN_BICUTAN: Applications.District.TWO,
         }
+
+        # Set expires_at when is_eligible is set to False
+        if not self.is_eligible:
+            self.expires_at = timezone.now() + timezone.timedelta(days=3)
+        else:
+            # Clear expires_at when is_eligible is set to True
+            self.expires_at = None
 
         self.district = district_mapping.get(self.barangay, self.district)
         super().save(*args, **kwargs)

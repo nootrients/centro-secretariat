@@ -83,6 +83,7 @@ class ApplicationsSerializer(serializers.ModelSerializer):
             'applying_for_academic_year',
 
             'is_eligible',
+            'expires_at',
             'is_approved',
             'approved_by',
             'scholar',

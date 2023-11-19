@@ -7,6 +7,7 @@ from datetime import datetime
 from django.contrib.auth import get_user_model
 
 from django.core.mail import send_mail, EmailMultiAlternatives
+from django.core.management import call_command
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 
@@ -140,3 +141,8 @@ def check_eligibility(application_id):
 
     application.is_eligible = eligibility_status
     application.save()
+
+
+@shared_task
+def clean_expired_instances():
+    call_command('clean_expired_instances')
