@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from application.models import TempApplications, Applications, EligibilityConfig
+from application.models import TempApplications, Applications, EligibilityConfig, StatusUpdate
 
 from demographics.serializer import GenderSerializer
 from demographics.models import Gender
@@ -201,5 +201,12 @@ class ApplicationRetrieveUpdateSerializer(serializers.ModelSerializer):
             'gender',
             'university_attending',
             'course_taking',
-            'scholar'
+            'scholar',
+            'expires_at',
         )
+
+
+class StatusUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StatusUpdate
+        fields = '__all__'

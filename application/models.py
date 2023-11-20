@@ -36,10 +36,6 @@ class Courses(models.Model):
         return self.course_name
 
 
-class ApplicationStatus(models.Model):
-    status_name = models.CharField(max_length=50, null=False, blank=False)
-
-
 class Applications(models.Model):
     class Barangay(models.TextChoices):
         """
@@ -590,3 +586,12 @@ class TempApplications(models.Model):
 
     def __str__(self):
         return self.application_reference_id
+    
+
+class StatusUpdate(models.Model):
+    application = models.ForeignKey(Applications, on_delete=models.CASCADE, null=True)
+    application_reference_id = models.CharField(max_length=100, null=True, blank=False)
+    date_accomplished = models.DateTimeField(auto_now_add=True)
+    description = models.CharField(max_length=150, null=True, blank=False)
+    current_step = models.PositiveSmallIntegerField(null=True, blank=False, default=1)
+    is_active = models.BooleanField(default=False, blank=False)

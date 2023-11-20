@@ -17,8 +17,8 @@ import django_filters, base64, uuid
 from rest_framework import permissions, status, generics, viewsets
 from accounts.permissions import IsOfficer, IsHeadOfficer
 
-from .models import Applications, EligibilityConfig, TempApplications, PartneredUniversities, Courses
-from .serializer import TempApplicationsSerializer, ApplicationsSerializer, EligibleApplicationsSerializer, EligibilityConfigSerializer, ApplicationRetrieveUpdateSerializer
+from .models import Applications, EligibilityConfig, TempApplications, PartneredUniversities, Courses, StatusUpdate
+from .serializer import TempApplicationsSerializer, ApplicationsSerializer, EligibleApplicationsSerializer, EligibilityConfigSerializer, ApplicationRetrieveUpdateSerializer, StatusUpdateSerializer
 from .image_processing import extract_id_info, extract_applicant_voters, extract_guardian_voters
 
 from .tasks import check_eligibility
@@ -369,7 +369,8 @@ class ReviewAndProcessView(APIView):
                 print(serializer.validated_data.keys())
 
                 if serializer.is_valid():
-                    serializer.save()
+                    # serializer.save()
+                    saved_application_instance = serializer.save()
 
                     # Send email after saving the instance
                     context = {
@@ -407,6 +408,15 @@ class ReviewAndProcessView(APIView):
                     # Delete instance after transferring data to Applications model
                     temp_application.delete()
 
+                    # Constant values after creation of an Application instance
+                    StatusUpdate.objects.create(
+                        application = saved_application_instance,
+                        application_reference_id = saved_application_instance.application_reference_id,
+                        description = "Your scholarship application has been submitted and received by our system.",
+                        current_step = 1,
+                        is_active = True
+                    )
+
                     response_data = {
                         'status': 'success',
                         'message': 'Data has been successfully updated and saved to the database.',
@@ -437,7 +447,6 @@ class EligibleApplicationsFilter(django_filters.FilterSet):
         }
 
 
-#class EligibleApplicationsList(ListAPIView):
 class EligibleApplicationsListAPIView(ListAPIView):
     """
     Endpoint for LISTING all the `ELIGIBLE` scholarship applications.
@@ -455,6 +464,10 @@ class EligibleApplicationsListAPIView(ListAPIView):
 
 
 class EligibleApplicationDetailAPIView(RetrieveUpdateAPIView):
+    """
+    Endpoint for retrieving the application instance's details, and for approving an application.
+    """
+
     permission_classes = [permissions.IsAdminUser | IsOfficer]
     queryset = Applications.objects.all()
     serializer_class = ApplicationRetrieveUpdateSerializer
@@ -502,9 +515,44 @@ class EligibleApplicationDetailAPIView(RetrieveUpdateAPIView):
         if instance.applicant_status == "NEW APPLICANT":
             supply_account.apply_async(args=[instance.id])
 
+        existing_status_updates = StatusUpdate.objects.filter(application_reference_id=instance.application_reference_id, is_active=True)
+        existing_status_updates.update(is_active=False)
+
+        StatusUpdate.objects.create(
+            application = instance,
+            application_reference_id = instance.application_reference_id,
+            description = f"Your scholarship application has been reviewed and evaluated by Officer {officer_profile.firstname} {officer_profile.lastname}.",
+            current_step = 4,
+            is_active = True
+        )
+
         response_data = {
             'status': 'success',
             'message': 'Scholarship application has been successfully approved.',
         }
             
         return Response(response_data, status=status.HTTP_200_OK)
+    
+
+class TrackingView(ListAPIView):
+    """
+    Endpoint for submitting the request to track the submitted scholarship application through its reference ID.
+    """
+
+    permission_classes = [permissions.AllowAny, ]
+    serializer_class = StatusUpdateSerializer
+
+    def get_queryset(self):
+        application_reference_id = self.kwargs.get('application_reference_id')
+        
+        if not self.application_reference_id_exists(application_reference_id):
+            return Response({'error': 'Application does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
+        return StatusUpdate.objects.filter(application_reference_id=application_reference_id)
+    
+    def application_reference_id_exists(self, application_reference_id):
+        try:
+            get_object_or_404(Applications, application_reference_id=application_reference_id)
+            return True
+        except:
+            return False

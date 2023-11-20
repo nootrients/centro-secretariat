@@ -1,5 +1,5 @@
 from celery import shared_task
-from application.models import Applications, EligibilityConfig
+from application.models import Applications, EligibilityConfig, StatusUpdate
 
 
 from datetime import datetime
@@ -24,6 +24,17 @@ def check_eligibility(application_id):
     # Utilities
     deficiency = []
     eligibility_status = None
+
+    existing_status_updates = StatusUpdate.objects.filter(application_reference_id=application.application_reference_id, is_active=True)
+    existing_status_updates.update(is_active=False)
+
+    StatusUpdate.objects.create(
+        application = application,
+        application_reference_id = application.application_reference_id,
+        description = "Your scholarship application is now undergoing our automated eligibility system.",
+        current_step = 2,
+        is_active = True
+    )
 
     def check_semester(semester_applied, semester):
         return semester_applied == semester
@@ -95,6 +106,17 @@ def check_eligibility(application_id):
         for reason in deficiency:
             print(reason)
 
+        existing_status_updates = StatusUpdate.objects.filter(application_reference_id=application.application_reference_id, is_active=True)
+        existing_status_updates.update(is_active=False)
+
+        StatusUpdate.objects.create(
+            application = application,
+            application_reference_id = application.application_reference_id,
+            description = "Your scholarship application failed to meet the requirements defined by the local municipality. Please try again in 3 days.",
+            current_step = 3,
+            is_active = True
+        )
+
         context = {
             "message": message_template,
             "firstname": application.firstname,
@@ -119,6 +141,18 @@ def check_eligibility(application_id):
 
     if not deficiency:
         eligibility_status = True
+
+        existing_status_updates = StatusUpdate.objects.filter(application_reference_id=application.application_reference_id, is_active=True)
+        existing_status_updates.update(is_active=False)
+
+        StatusUpdate.objects.create(
+            application = application,
+            application_reference_id = application.application_reference_id,
+            description = "Your scholarship application has passed the requirements defined by the local municipality.",
+            current_step = 3,
+            is_active = True
+        )
+
         context = {
             "message": message_template,
             "firstname": application.firstname,

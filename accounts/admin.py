@@ -22,6 +22,7 @@ class UserProfileInline(admin.StackedInline):
 class ScholarProfileInline(admin.StackedInline):
     model = ScholarProfile
     can_delete = False
+    #verbose_name_plural = 'Scholar Profiles'
 
 
 # admin.site.register(CustomUser)
@@ -89,7 +90,7 @@ class ScholarAdmin(BaseUserAdmin):
                                        'groups', 'user_permissions')}),
         (('Important dates'), {'fields': ('last_login', 'date_joined')}),
     )
-    list_display = ('username', 'email', 'is_staff', 'is_active')
+    list_display = ('username', 'email', 'is_active')
     search_fields = ('email', 'username')
     ordering = ('username', )
     inlines = (ScholarProfileInline, )
