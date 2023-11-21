@@ -210,3 +210,13 @@ class StatusUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = StatusUpdate
         fields = '__all__'
+
+
+class TempApplicationsRetrievalSerializer(serializers.ModelSerializer):
+    """
+    Serializer for retrieving ALL THE DATA saved from TempApplications table
+    """
+
+    class Meta:
+        model = TempApplications
+        fields = '__all__'

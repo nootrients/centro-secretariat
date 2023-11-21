@@ -1,3 +1,5 @@
+import django_filters, base64, uuid
+
 from django.db.models import Q
 from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse
@@ -12,17 +14,16 @@ from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 from django.core.files.base import ContentFile
 from datetime import datetime
-import django_filters, base64, uuid
 
 from rest_framework import permissions, status, generics, viewsets
-from accounts.permissions import IsOfficer, IsHeadOfficer
 
 from .models import Applications, EligibilityConfig, TempApplications, PartneredUniversities, Courses, StatusUpdate
-from .serializer import TempApplicationsSerializer, ApplicationsSerializer, EligibleApplicationsSerializer, EligibilityConfigSerializer, ApplicationRetrieveUpdateSerializer, StatusUpdateSerializer
+from .serializer import TempApplicationsSerializer, TempApplicationsRetrievalSerializer, ApplicationsSerializer, EligibleApplicationsSerializer, EligibilityConfigSerializer, ApplicationRetrieveUpdateSerializer, StatusUpdateSerializer
 from .image_processing import extract_id_info, extract_applicant_voters, extract_guardian_voters
-
 from .tasks import check_eligibility
+
 from accounts.tasks import supply_account
+from accounts.permissions import IsOfficer, IsHeadOfficer
 from demographics.models import Gender
 
 # For sending custom email
@@ -220,7 +221,7 @@ class ReviewAndProcessView(APIView):
     def get(self, request, application_reference_id, *args, **kwargs):
         # Retrieve the TempApplications instance using application_reference_id
         temp_application = get_object_or_404(TempApplications, application_reference_id=application_reference_id)
-        serializer = TempApplicationsSerializer(temp_application)
+        serializer = TempApplicationsRetrievalSerializer(temp_application)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
     
