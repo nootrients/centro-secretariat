@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.validators import ValidationError
 
 from django_filters.rest_framework import DjangoFilterBackend
 from django.core.files.base import ContentFile
@@ -455,7 +456,7 @@ class EligibleApplicationsListAPIView(ListAPIView):
     # OLD CODE
     permission_classes = [permissions.IsAdminUser | IsOfficer]
 
-    queryset = Applications.objects.filter(is_eligible=True, is_approved=False, approved_by=None)
+    queryset = Applications.objects.filter(is_eligible=True, status="PENDING", evaluated_by=None)
     serializer_class = EligibleApplicationsSerializer
 
     filter_backends = [DjangoFilterBackend]
@@ -479,60 +480,98 @@ class EligibleApplicationDetailAPIView(RetrieveUpdateAPIView):
         return get_object_or_404(Applications, application_reference_id=application_reference_id)
     
     def update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        is_approved = request.data.get('is_approved', False)
+        try:
+            instance = self.get_object()
+            status = request.data.get('status', "PENDING")
 
-        if is_approved:
-            officer_instance = get_user_model().objects.get(pk=request.user.id)
-            instance.is_approved = True
-            instance.approved_by = officer_instance
-            instance.save()
+            if status == "ACCEPTED":
+                officer_instance = get_user_model().objects.get(pk=request.user.id)
+                instance.status = "ACCEPTED"
+                instance.evaluated_by = officer_instance
+                instance.save()
 
-            officer_profile = officer_instance.profile
+                officer_profile = officer_instance.profile
 
-            # Send email after saving the instance
-            context = {
-                "firstname": instance.firstname,
-                "lastname": instance.lastname,
-                "application_reference_id": instance.application_reference_id,
-                "officer_firstname": officer_profile.firstname,
-                "officer_lastname": officer_profile.lastname,
-                "officer_instance_email": officer_instance.email
-            }
+                # Send email after saving the instance
+                context = {
+                    "firstname": instance.firstname,
+                    "lastname": instance.lastname,
+                    "application_reference_id": instance.application_reference_id,
+                    "officer_firstname": officer_profile.firstname,
+                    "officer_lastname": officer_profile.lastname,
+                    "officer_instance_email": officer_instance.email
+                }
 
-            html_message = render_to_string("content/application_approved_email.html", context=context)
-            plain_message = strip_tags(html_message)
+                html_message = render_to_string("content/application_approved_email.html", context=context)
+                plain_message = strip_tags(html_message)
 
-            message = EmailMultiAlternatives(
-                subject = "Scholarship Application",
-                body = plain_message,
-                from_email = None,
-                to = [instance.email_address, ]
+                message = EmailMultiAlternatives(
+                    subject = "Scholarship Application",
+                    body = plain_message,
+                    from_email = None,
+                    to = [instance.email_address, ]
+                )
+
+                message.attach_alternative(html_message, "text/html")
+                message.send()
+            
+            elif status == "REJECTED":
+                officer_instance = get_user_model().objects.get(pk=request.user.id)
+                instance.status = "REJECTED"
+                instance.evaluated_by = officer_instance
+                instance.save()
+
+                officer_profile = officer_instance.profile
+
+                # Send email after saving the instance
+                context = {
+                    "firstname": instance.firstname,
+                    "lastname": instance.lastname,
+                    "application_reference_id": instance.application_reference_id,
+                    "officer_firstname": officer_profile.firstname,
+                    "officer_lastname": officer_profile.lastname,
+                    "officer_instance_email": officer_instance.email
+                }
+
+                html_message = render_to_string("content/application_rejected_email.html", context=context)
+                plain_message = strip_tags(html_message)
+
+                message = EmailMultiAlternatives(
+                    subject = "Scholarship Application",
+                    body = plain_message,
+                    from_email = None,
+                    to = [instance.email_address, ]
+                )
+
+                message.attach_alternative(html_message, "text/html")
+                message.send()
+            
+            if instance.applicant_status == "NEW APPLICANT" and instance.status == "ACCEPTED":
+                supply_account.apply_async(args=[instance.id])
+
+            existing_status_updates = StatusUpdate.objects.filter(application_reference_id=instance.application_reference_id, is_active=True)
+            existing_status_updates.update(is_active=False)
+
+            StatusUpdate.objects.create(
+                application = instance,
+                application_reference_id = instance.application_reference_id,
+                description = f"Your scholarship application has been reviewed and evaluated by Officer {officer_profile.firstname} {officer_profile.lastname}.",
+                current_step = 4,
+                is_active = True
             )
 
-            message.attach_alternative(html_message, "text/html")
-            message.send()
-        
-        if instance.applicant_status == "NEW APPLICANT":
-            supply_account.apply_async(args=[instance.id])
-
-        existing_status_updates = StatusUpdate.objects.filter(application_reference_id=instance.application_reference_id, is_active=True)
-        existing_status_updates.update(is_active=False)
-
-        StatusUpdate.objects.create(
-            application = instance,
-            application_reference_id = instance.application_reference_id,
-            description = f"Your scholarship application has been reviewed and evaluated by Officer {officer_profile.firstname} {officer_profile.lastname}.",
-            current_step = 4,
-            is_active = True
-        )
-
-        response_data = {
-            'status': 'success',
-            'message': 'Scholarship application has been successfully approved.',
-        }
-            
-        return Response(response_data, status=status.HTTP_200_OK)
+            response_data = {
+                'status': 'success',
+                'message': 'Scholarship application has been successfully evaluated.',
+            }
+                
+            return Response(response_data, status=status.HTTP_200_OK)
+        except get_user_model().DoesNotExist:
+            raise ValidationError({"detail": "User does not exist."}, status_code=status.HTTP_404_NOT_FOUND)
+        # except Applications.DoesNotExist:
+        #     raise ValidationError({"detail": "Application does not exist."}, status_code=status.HTTP_404_NOT_FOUND)
+        # except Exception as e:
+        #     return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 
 class TrackingView(ListAPIView):

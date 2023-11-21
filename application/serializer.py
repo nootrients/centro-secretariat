@@ -77,6 +77,12 @@ class ApplicationsSerializer(serializers.ModelSerializer):
         model = Applications
         fields = '__all__'
         read_only_fields = (
+            'national_id',
+            'informative_copy_of_grades',
+            'voter_certificate',
+            'registration_form',
+            'guardians_voter_certificate',
+
             'district',
                             
             'applicant_status',
@@ -84,8 +90,8 @@ class ApplicationsSerializer(serializers.ModelSerializer):
 
             'is_eligible',
             'expires_at',
-            'is_approved',
-            'approved_by',
+            'status',
+            'evaluated_by',
             'scholar',
         )
 
@@ -134,8 +140,8 @@ class EligibleApplicationsSerializer(serializers.ModelSerializer):
 # Change to something else, RetrieveUpdate should be used for retrieval of application in the applicant's side
 class ApplicationRetrieveUpdateSerializer(serializers.ModelSerializer):
     """Serializer for retrieving and approving/rejecting an eligible scholarship application."""
-    is_approved = serializers.BooleanField(write_only=True)
-    approved_by = serializers.CharField(write_only=True, required=False)
+    status = serializers.ChoiceField(write_only=True, choices=Applications.Status.choices)
+    evaluated_by = serializers.CharField(write_only=True, required=False)
 
     class Meta:
         model = Applications

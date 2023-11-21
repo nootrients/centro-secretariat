@@ -130,6 +130,13 @@ class Applications(models.Model):
         REGULAR = "REGULAR", "REGULAR"
         IRREGULAR = "IRREGULAR", "IRREGULAR"
         OCTOBERIAN = "OCTOBERIAN", "OCTOBERIAN"
+
+
+    class Status(models.TextChoices):
+        PENDING = "PENDING", "PENDING"
+        ACCEPTED = "ACCEPTED", "ACCEPTED"
+        REJECTED = "REJECTED", "REJECTED"
+
     
     # Generate from front-end
     application_reference_id = models.CharField(max_length=20, null=True, blank=False)
@@ -236,17 +243,15 @@ class Applications(models.Model):
     is_eligible = models.BooleanField(null=False, default=False)
     expires_at = models.DateTimeField(null=True, blank=False)
 
-    is_approved = models.BooleanField(null=False, default=False)
+    # is_approved = models.BooleanField(null=False, default=False)
+    status = models.CharField(max_length=50, null=True, blank=False, choices=Status.choices, default=Status.PENDING)
+    evaluated_by = models.ForeignKey(Officer, on_delete=models.CASCADE, null=True, blank=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
-    approved_by = models.ForeignKey(Officer, on_delete=models.CASCADE, null=True, blank=True)
 
     # To be filled up after approval
     scholar = models.OneToOneField(Scholar, on_delete=models.CASCADE, null=True, blank=True, related_name='scholar')
-
-    #status = models.ForeignKey(ApplicationStatus, on_delete=models.CASCADE, null=False, blank=False, default=1)
 
     @property
     def calculate_age(self):
@@ -483,7 +488,7 @@ class TempApplications(models.Model):
     is_ladderized = models.BooleanField(null=True, blank=False)
     course_taking = models.ForeignKey(Courses, on_delete=models.CASCADE, max_length=50, null=True, blank=False)
     year_level = models.CharField(max_length=15, choices=YearLevel.choices, null=True, blank=False)
-    is_graduating = models.BooleanField(null=False, blank=False)
+    is_graduating = models.BooleanField(null=False, blank=False, default=False)
     course_duration = models.CharField(max_length=15, choices=CourseDuration.choices, null=True, blank=False)
     
 

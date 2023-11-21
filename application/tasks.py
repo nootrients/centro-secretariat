@@ -102,6 +102,7 @@ def check_eligibility(application_id):
 
     if deficiency:
         eligibility_status = False
+        status = "REJECTED"
         print("Your application has been rejected. Reason(s): ")
         for reason in deficiency:
             print(reason)
@@ -112,7 +113,7 @@ def check_eligibility(application_id):
         StatusUpdate.objects.create(
             application = application,
             application_reference_id = application.application_reference_id,
-            description = "Your scholarship application failed to meet the requirements defined by the local municipality. Please try again in 3 days.",
+            description = "Your scholarship application failed to meet the requirements defined by the local municipality, and is now automatically rejected. Please try again in 3 days.",
             current_step = 3,
             is_active = True
         )
@@ -141,6 +142,7 @@ def check_eligibility(application_id):
 
     if not deficiency:
         eligibility_status = True
+        status = "PENDING"
 
         existing_status_updates = StatusUpdate.objects.filter(application_reference_id=application.application_reference_id, is_active=True)
         existing_status_updates.update(is_active=False)
@@ -174,6 +176,7 @@ def check_eligibility(application_id):
         message.send()
 
     application.is_eligible = eligibility_status
+    application.status = status
     application.save()
 
 
