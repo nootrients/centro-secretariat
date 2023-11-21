@@ -88,8 +88,8 @@ class ApplicationForm(CreateAPIView):
                     
                 'informative_copy_of_grades_name': data['informative_copy_of_grades'].name,                    # Get file name instead of the whole file for processing
                 'informative_copy_of_grades_content': data['informative_copy_of_grades'].read(),               # Get file content(binary) instead of the whole file for processing
-                #'is_applying_for_merit': bool(data.get('is_applying_for_merit')),
-                'is_applying_for_merit': bool(data['is_applying_for_merit']),
+                'is_applying_for_merit': data.get('is_applying_for_merit'),
+                #'is_applying_for_merit': bool(data['is_applying_for_merit']),
 
                 'voter_certificate_name': data['voter_certificate'].name,                                      # Get file name instead of the whole file for processing
                 'voter_certificate_content': data['voter_certificate'].read(),                                 # Get file content(binary) instead of the whole file for processing
@@ -99,11 +99,11 @@ class ApplicationForm(CreateAPIView):
                 'registration_form_content': data['registration_form'].read(),                                 # Get file content(binary) instead of the whole file for processing
                     
                 'total_units_enrolled': data['total_units_enrolled'],
-                'is_ladderized': bool(data.get('is_ladderized')),
+                'is_ladderized': data.get('is_ladderized'),
                 #'is_ladderized': bool(data['is_ladderized']),
                 
                 'year_level': data['year_level'],
-                'is_graduating': bool(data.get('is_graduating')),
+                'is_graduating': data.get('is_graduating'),
                 #'is_graduating': bool(data['is_graduating']),
                 'course_duration': data['course_duration'],
 
