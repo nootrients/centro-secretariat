@@ -24,7 +24,7 @@ from .image_processing import extract_id_info, extract_applicant_voters, extract
 from .tasks import check_eligibility
 
 from accounts.tasks import supply_account
-from accounts.permissions import IsOfficer, IsHeadOfficer
+from accounts.permissions import IsOfficer, IsHeadOfficer, IsLinkedApplicationUser
 from demographics.models import Gender
 
 # For sending custom email
@@ -582,13 +582,42 @@ class TrackingView(ListAPIView):
     permission_classes = [permissions.AllowAny, ]
     serializer_class = StatusUpdateSerializer
 
-    def get_queryset(self):
+    # Old code
+    # def get_queryset(self):
+    #     application_reference_id = self.kwargs.get('application_reference_id')
+        
+    #     if not self.application_reference_id_exists(application_reference_id):
+    #         return Response({'error': 'Application does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
+    #     return StatusUpdate.objects.filter(application_reference_id=application_reference_id)
+
+    def get(self, request, *args, **kwargs):
         application_reference_id = self.kwargs.get('application_reference_id')
         
         if not self.application_reference_id_exists(application_reference_id):
             return Response({'error': 'Application does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        
+        application = get_object_or_404(Applications, application_reference_id=application_reference_id)
+        status_updates = StatusUpdate.objects.filter(application_reference_id=application_reference_id)
 
-        return StatusUpdate.objects.filter(application_reference_id=application_reference_id)
+        data = {
+            'lastname': application.lastname,
+            'firstname': application.firstname,
+            'middlename': application.middlename,
+            'email_address': application.email_address,
+
+            'status_updates': [
+                {
+                    'date_accomplished': status_update.date_accomplished,
+                    'description': status_update.description,
+                    'current_step': status_update.current_step,
+                    'is_active': status_update.is_active,
+                }
+                for status_update in status_updates
+            ],
+        }
+
+        return Response(data)
     
     def application_reference_id_exists(self, application_reference_id):
         try:
@@ -596,3 +625,13 @@ class TrackingView(ListAPIView):
             return True
         except:
             return False
+        
+
+class RenewingForm(RetrieveUpdateAPIView):
+    """
+    Endpoint for enabling the Scholars to RENEW their scholarship application.
+    """
+
+    permission_classes = [permissions.IsAuthenticated, IsLinkedApplicationUser]
+
+    

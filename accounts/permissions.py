@@ -47,3 +47,19 @@ class IsLinkedUser(BasePermission):
         
         # Write permissions are only allowed to the author of a post
         return obj.user == request.user
+    
+
+class IsLinkedApplicationUser(BasePermission):
+    """
+    Custom permission class that enables the user to edit his or her linked application.
+    """
+
+    message = "Editing application is restricted to the only user linked to it."
+
+    def has_object_permission(self, request, view, obj):
+        # Read-only permissions are allowed for any request
+        if request.method in SAFE_METHODS:
+            return True
+
+        # Write permissions are only allowed to the author of the application
+        return obj.scholar.user_ptr == request.user
