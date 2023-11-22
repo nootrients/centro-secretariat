@@ -16,7 +16,7 @@ import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+ROOT = os.path.dirname(os.path.abspath(__file__))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -258,6 +258,4 @@ EMAIL_HOST_PASSWORD = os.environ.get("CAPSTONE_EMAIL_HOST_PASSWORD")
 
 CSV_DIRECTORY = Path("survey_reports/csv/")
 TEX_DIRECTORY = Path("survey_reports/tex/")
-# TEX_CONFIGURATION_FILE = Path('texconf.yml')
-# TEXCONF_FILE_PATH = os.path.join(BASE_DIR, 'survey_reports/texconf.yml')
-# TEXCONF_FILE_PATH = Path('texconf.yml')
+# TEX_CONFIGURATION_FILE = os.path.join(ROOT, "docs", "tex_conf.yaml")

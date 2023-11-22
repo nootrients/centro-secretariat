@@ -11,6 +11,10 @@ from django.conf.urls.static import static
 urlpatterns = [
     # Index / Home / Root AND Scholarship Submission / Retrieval / Tracking
     path('', include('index.urls')),
+    
+    # Path for Head Scholarship Officer as a normal user
+    path('head/', include('head.urls')),
+    
     # Path for Head Scholarship Officer as a SuperUser
     path('admin/', admin.site.urls),
     

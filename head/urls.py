@@ -3,6 +3,5 @@ from . import views
 
 # URLConf
 urlpatterns = [
-    path("index/", views.index, name="index"),
-    path("manageCriteria/", views.manageCriteria, name="manageCriteria"),
+    path('dashboard/', views.DashboardDataView.as_view(), name='dashboard'),
 ]

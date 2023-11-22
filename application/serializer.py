@@ -226,3 +226,13 @@ class TempApplicationsRetrievalSerializer(serializers.ModelSerializer):
     class Meta:
         model = TempApplications
         fields = '__all__'
+
+
+class DashboardDataSerializer(serializers.ModelSerializer):
+    """
+    Serializer for displaying numerical data to serve into the Head Officer's dashboard endpoint
+    """
+
+    class Meta:
+        model = Applications
+        fields = '__all__'

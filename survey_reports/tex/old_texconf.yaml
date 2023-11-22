@@ -1,0 +1,64 @@
+generic:
+  document_option: 12pt
+
+  document_class: report
+
+  questions:
+    "Does the website appear easy to navigate?":
+      chart:
+        type: pie
+        color: 
+          "Extremely easy": "#488F31"
+          "Very easy": "#A6A65A"
+          "Somewhat easy": "#DFC29D"
+          "Not so easy": "#DC8863"
+          "Not at all easy": "#DE425B"
+        text: pin
+    "Does the website have all the features and functionalities you expected?":
+      chart:
+        type: polar
+        color:
+          "Agree": "#5B84B1FF"
+          "Disagree": "#FC766AFF"
+        text: pin
+    "Are you satisfied with how the website handled the scholarship application submission?":
+      chart:
+        type: pie
+        color:
+          "Extremely satisfied": "#488f31"
+          "Satisfied": "#a6a65a"
+          "Somewhat satisfied": "#dfc29d"
+          "Not so satisfied": "#dc8863"
+          "Not at all satisfied": "#de425b"
+        text: pin
+    "How satisfied are you with the reliability of this website":
+      chart:
+        type: pie
+        color:
+          "Extremely satisfied": "#488f31"
+          "Satisfied": "#a6a65a"
+          "Somewhat satisfied": "#dfc29d"
+          "Not so satisfied": "#dc8863"
+          "Not at all satisfied": "#de425b"
+        text: pin
+    "What do you like the least about the website?":
+      chart:
+        type: cloud
+        color:
+          "Navigation": "#003f5c"
+          "Functionality": "#58508d"
+          "Look and feel": "#955196"
+          "Speed": "#dd5182"
+          "Stability": "#ff6e54" 
+          "Content": "#ffa600"
+        text: pin
+    "Overall, how would you rate the quality of the system?":
+      chart:
+        type: pie
+        color:
+          "Very high quality": "#488f31"
+          "High quality": "#a7a65a"
+          "Neither high nor low quality": "#e0c29d"
+          "Low quality": "#e18a67"
+          "Very low quality": "#de425b"
+        text: pin
