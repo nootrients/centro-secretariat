@@ -258,6 +258,6 @@ EMAIL_HOST_PASSWORD = os.environ.get("CAPSTONE_EMAIL_HOST_PASSWORD")
 
 CSV_DIRECTORY = Path("survey_reports/csv/")
 TEX_DIRECTORY = Path("survey_reports/tex/")
-TEX_CONFIGURATION_FILE = Path('texconf.yml')
+# TEX_CONFIGURATION_FILE = Path('texconf.yml')
 # TEXCONF_FILE_PATH = os.path.join(BASE_DIR, 'survey_reports/texconf.yml')
-TEXCONF_FILE_PATH = Path('texconf.yml')
+# TEXCONF_FILE_PATH = Path('texconf.yml')
