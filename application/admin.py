@@ -5,4 +5,4 @@ from .models import PartneredUniversities, Courses, Applications, TempApplicatio
 # admin.site.register(PartneredUniversities)
 # admin.site.register(Courses)
 admin.site.register(Applications)
-admin.site.register(TempApplications)
+# admin.site.register(TempApplications)
