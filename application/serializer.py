@@ -140,7 +140,7 @@ class EligibleApplicationsSerializer(serializers.ModelSerializer):
 # Change to something else, RetrieveUpdate should be used for retrieval of application in the applicant's side
 class ApplicationRetrieveUpdateSerializer(serializers.ModelSerializer):
     """Serializer for retrieving and approving/rejecting an eligible scholarship application."""
-    status = serializers.ChoiceField(write_only=True, choices=Applications.Status.choices)
+    application_status = serializers.ChoiceField(write_only=True, choices=Applications.Status.choices)
     evaluated_by = serializers.CharField(write_only=True, required=False)
 
     class Meta:
@@ -231,6 +231,16 @@ class TempApplicationsRetrievalSerializer(serializers.ModelSerializer):
 class DashboardDataSerializer(serializers.ModelSerializer):
     """
     Serializer for displaying numerical data to serve into the Head Officer's dashboard endpoint
+    """
+
+    class Meta:
+        model = Applications
+        fields = '__all__'
+
+
+class ApplicationsRenewalSerializer(serializers.ModelSerializer):
+    """
+    Serializer for retrieving specific fields for renewal of application
     """
 
     class Meta:

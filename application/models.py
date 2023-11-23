@@ -244,7 +244,7 @@ class Applications(models.Model):
     expires_at = models.DateTimeField(null=True, blank=False)
 
     # is_approved = models.BooleanField(null=False, default=False)
-    status = models.CharField(max_length=50, null=True, blank=False, choices=Status.choices, default=Status.PENDING)
+    application_status = models.CharField(max_length=50, null=True, blank=False, choices=Status.choices, default=Status.PENDING)
     evaluated_by = models.ForeignKey(Officer, on_delete=models.CASCADE, null=True, blank=True)
     
     created_at = models.DateTimeField(auto_now_add=True)

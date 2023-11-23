@@ -19,7 +19,7 @@ from datetime import datetime
 from rest_framework import permissions, status, generics, viewsets
 
 from .models import Applications, EligibilityConfig, TempApplications, PartneredUniversities, Courses, StatusUpdate
-from .serializer import TempApplicationsSerializer, TempApplicationsRetrievalSerializer, ApplicationsSerializer, EligibleApplicationsSerializer, EligibilityConfigSerializer, ApplicationRetrieveUpdateSerializer, StatusUpdateSerializer
+from .serializer import TempApplicationsSerializer, TempApplicationsRetrievalSerializer, ApplicationsSerializer, EligibleApplicationsSerializer, EligibilityConfigSerializer, ApplicationRetrieveUpdateSerializer, StatusUpdateSerializer, ApplicationsRenewalSerializer
 from .image_processing import extract_id_info, extract_applicant_voters, extract_guardian_voters
 from .tasks import check_eligibility
 
@@ -456,7 +456,7 @@ class EligibleApplicationsListAPIView(ListAPIView):
     # OLD CODE
     permission_classes = [permissions.IsAdminUser | IsOfficer]
 
-    queryset = Applications.objects.filter(is_eligible=True, status="PENDING", evaluated_by=None)
+    queryset = Applications.objects.filter(is_eligible=True, application_status="PENDING", evaluated_by=None)
     serializer_class = EligibleApplicationsSerializer
 
     filter_backends = [DjangoFilterBackend]
@@ -482,11 +482,11 @@ class EligibleApplicationDetailAPIView(RetrieveUpdateAPIView):
     def update(self, request, *args, **kwargs):
         try:
             instance = self.get_object()
-            status = request.data.get('status', "PENDING")
+            application_status = request.data.get('application_status', "PENDING")
 
-            if status == "ACCEPTED":
+            if application_status == "ACCEPTED":
                 officer_instance = get_user_model().objects.get(pk=request.user.id)
-                instance.status = "ACCEPTED"
+                instance.application_status = "ACCEPTED"
                 instance.evaluated_by = officer_instance
                 instance.save()
 
@@ -515,9 +515,9 @@ class EligibleApplicationDetailAPIView(RetrieveUpdateAPIView):
                 message.attach_alternative(html_message, "text/html")
                 message.send()
             
-            elif status == "REJECTED":
+            elif application_status == "REJECTED":
                 officer_instance = get_user_model().objects.get(pk=request.user.id)
-                instance.status = "REJECTED"
+                instance.application_status = "REJECTED"
                 instance.evaluated_by = officer_instance
                 instance.save()
 
@@ -546,7 +546,7 @@ class EligibleApplicationDetailAPIView(RetrieveUpdateAPIView):
                 message.attach_alternative(html_message, "text/html")
                 message.send()
             
-            if instance.applicant_status == "NEW APPLICANT" and instance.status == "ACCEPTED":
+            if instance.applicant_status == "NEW APPLICANT" and instance.application_status == "ACCEPTED":
                 supply_account.apply_async(args=[instance.id])
 
             existing_status_updates = StatusUpdate.objects.filter(application_reference_id=instance.application_reference_id, is_active=True)
@@ -627,11 +627,16 @@ class TrackingView(ListAPIView):
             return False
         
 
-class RenewingForm(RetrieveUpdateAPIView):
+class RenewingForm(APIView):
     """
     Endpoint for enabling the Scholars to RENEW their scholarship application.
     """
 
-    permission_classes = [permissions.IsAuthenticated, IsLinkedApplicationUser]
+    permission_classes = [permissions.IsAuthenticated | IsLinkedApplicationUser]
 
+    def get(self, request, application_reference_id, *args, **kwargs):
+        application = get_object_or_404(Applications, application_reference_id=application_reference_id)
+        serializer = ApplicationsRenewalSerializer(application)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
     
