@@ -121,7 +121,7 @@ class CreateOfficer(generics.CreateAPIView):
 
 class UserProfileDetail(generics.RetrieveUpdateAPIView):
 
-    permission_classes = [IsLinkedUser]
+    permission_classes = [IsAuthenticated]
     
     def get_serializer_class(self):
         # Get the role of the user making the request
@@ -146,12 +146,12 @@ class UserProfileDetail(generics.RetrieveUpdateAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class HeadProfileDetail(AllowPUTAsCreateMixin, generics.RetrieveUpdateAPIView, IsLinkedUser):
+class HeadProfileDetail(AllowPUTAsCreateMixin, generics.RetrieveUpdateAPIView):
     """
     Retrieves the profile of a specific Head Officer.
     """
 
-    permission_classes = [IsLinkedUser, IsAdminUser | IsHeadOfficer]
+    permission_classes = [IsAuthenticated, ]
     queryset = HeadProfile.objects.all()
     serializer_class = HeadProfileSerializer
     lookup_field = 'user__username'
@@ -161,12 +161,12 @@ class HeadProfileDetail(AllowPUTAsCreateMixin, generics.RetrieveUpdateAPIView, I
         return get_object_or_404(HeadProfile, user__username=username)
     
 
-class OfficerProfileDetail(AllowPUTAsCreateMixin, generics.RetrieveUpdateAPIView, IsLinkedUser, IsAdminOfficer, IsHeadOfficer):
+class OfficerProfileDetail(AllowPUTAsCreateMixin, generics.RetrieveUpdateAPIView):
     """
     Retrieves the profile of a specific Officer.
     """
 
-    permission_classes = [IsLinkedUser, IsAdminUser | IsHeadOfficer]
+    permission_classes = [IsAuthenticated, IsAdminUser | IsHeadOfficer]
     queryset = OfficerProfile.objects.all()
     serializer_class = OfficerProfileSerializer
     lookup_field = 'user__username'
@@ -176,12 +176,12 @@ class OfficerProfileDetail(AllowPUTAsCreateMixin, generics.RetrieveUpdateAPIView
         return get_object_or_404(OfficerProfile, user__username=username)
     
 
-class ScholarProfileDetail(generics.RetrieveAPIView, IsLinkedUser):
+class ScholarProfileDetail(generics.RetrieveAPIView):
     """
     Retrieves the profile of a specific Scholar.
     """
 
-    permission_classes = [IsLinkedUser]
+    permission_classes = [IsAuthenticated, ]
     queryset = ScholarProfile.objects.all()
     serializer_class = ScholarProfileSerializer
     lookup_field = 'user__username'

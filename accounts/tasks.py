@@ -73,3 +73,19 @@ def supply_account(application_id):
 
     message.attach_alternative(html_message, "text/html")
     message.send()
+
+
+@shared_task
+def update_scholar_profile(application_id):
+    application = Applications.objects.get(id=application_id)
+
+    scholar_profile = ScholarProfile.objects.get(user=application.scholar)
+
+    # Update specific fields in the ScholarProfile model
+    scholar_profile.house_address = application.house_address
+    scholar_profile.barangay = application.barangay
+    scholar_profile.district = application.district
+    scholar_profile.years_of_residency = application.years_of_residency
+    scholar_profile.is_graduating = application.is_graduating
+
+    scholar_profile.save()

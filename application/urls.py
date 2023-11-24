@@ -10,6 +10,7 @@ urlpatterns = [
     # API-endpoint for submitting scholarship application
     path('', views.ApplicationForm.as_view(), name='application-form'),
     path('review-and-process/<str:application_reference_id>/', views.ReviewAndProcessView.as_view(), name='review-and-process'),
+    path('renew/', views.RenewingForm.as_view(), name='renewing-form'),
 
     # GET
     path('tracking/<str:application_reference_id>/', views.TrackingView.as_view(), name='tracking-details'),

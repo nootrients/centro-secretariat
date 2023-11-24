@@ -243,6 +243,70 @@ class ApplicationsRenewalSerializer(serializers.ModelSerializer):
     Serializer for retrieving specific fields for renewal of application
     """
 
+    years_of_residency = serializers.CharField(write_only=True, allow_blank=True, required=False)
+    voters_issued_at = serializers.CharField(write_only=True, allow_blank=True, required=False)
+    voters_issuance_date = serializers.CharField(write_only=True, allow_blank=True, required=False)
+
+    # Guardian's Voter's Certificate Validation Fields
+    guardians_years_of_residency = serializers.CharField(write_only=True, allow_blank=True, required=False)
+    guardians_voters_issued_at = serializers.CharField(write_only=True, allow_blank=True, required=False)
+    guardians_voters_issuance_date = serializers.CharField(write_only=True, allow_blank=True, required=False)
+
     class Meta:
         model = Applications
         fields = '__all__'
+        read_only_fields = (
+            # 'application_reference_id',
+            'national_id',
+            # 'lastname',
+            # 'firstname',
+            # 'middlename',
+            'birthdate',
+            'district',
+            # 'email_address',
+            'religion',
+            'scholarship_type',
+            'gender',
+
+            'elementary_school',
+            'elementary_school_type',
+            'elementary_school_address',
+            'elementary_start_end',
+            'jhs_school',
+            'jhs_school_type',
+            'jhs_school_address',
+            'jhs_start_end',
+            'shs_school',
+            'shs_school_type',
+            'shs_school_address',
+            'shs_start_end',
+
+            'applicant_status',
+            'applying_for_academic_year',
+
+            'is_eligible',
+            'expires_at',
+            'application_status',
+            'evaluated_by',
+            'scholar',
+        )
+
+    def update(self, instance, validated_data):
+        # Extract and decode the base64_content
+        icg_base64_content = validated_data.pop('informative_copy_of_grades_content', None)
+        applicant_voters_base64_content = validated_data.pop('voter_certificate_content', None)
+        registration_form_base64_content = validated_data.pop('registration_form_content', None)
+        guardian_voters_base64_content = validated_data.pop('guardians_voter_certificate_content', None)
+        
+        if icg_base64_content and applicant_voters_base64_content and registration_form_base64_content and guardian_voters_base64_content:
+            icg_binary_content = base64.b64decode(icg_base64_content)
+            applicant_voters_binary_content = base64.b64decode(applicant_voters_base64_content)
+            registration_form_binary_content = base64.b64decode(registration_form_base64_content)
+            guardian_voters_binary_content = base64.b64decode(guardian_voters_base64_content)
+
+            validated_data['informative_copy_of_grades'] = ContentFile(icg_binary_content, name='informative_copy_of_grades.pdf')
+            validated_data['voter_certificate'] = ContentFile(applicant_voters_binary_content, name='applicant_votersCert.jpg')
+            validated_data['registration_form'] = ContentFile(registration_form_binary_content, name='registration_form.pdf')
+            validated_data['guardians_voter_certificate'] = ContentFile(guardian_voters_binary_content, name='guardians_votersCert.jpg')
+
+        return super(ApplicationsRenewalSerializer, self).update(instance, validated_data)

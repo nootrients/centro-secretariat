@@ -23,7 +23,7 @@ from .serializer import TempApplicationsSerializer, TempApplicationsRetrievalSer
 from .image_processing import extract_id_info, extract_applicant_voters, extract_guardian_voters
 from .tasks import check_eligibility
 
-from accounts.tasks import supply_account
+from accounts.tasks import supply_account, update_scholar_profile
 from accounts.permissions import IsOfficer, IsHeadOfficer, IsLinkedApplicationUser
 from demographics.models import Gender
 
@@ -394,6 +394,15 @@ class ReviewAndProcessView(APIView):
                     message.attach_alternative(html_message, "text/html")
                     message.send()
 
+                    # Constant values after creation of an Application instance
+                    StatusUpdate.objects.create(
+                        application = saved_application_instance,
+                        application_reference_id = saved_application_instance.application_reference_id,
+                        description = "Your scholarship application has been submitted and received by our system.",
+                        current_step = 1,
+                        is_active = True
+                    )
+
                     # Initiate Automated Eligibility Checking
                     # Get the application ID after saving
                     application_id = serializer.data.get('id')
@@ -410,14 +419,14 @@ class ReviewAndProcessView(APIView):
                     # Delete instance after transferring data to Applications model
                     temp_application.delete()
 
-                    # Constant values after creation of an Application instance
-                    StatusUpdate.objects.create(
-                        application = saved_application_instance,
-                        application_reference_id = saved_application_instance.application_reference_id,
-                        description = "Your scholarship application has been submitted and received by our system.",
-                        current_step = 1,
-                        is_active = True
-                    )
+                    # # Constant values after creation of an Application instance
+                    # StatusUpdate.objects.create(
+                    #     application = saved_application_instance,
+                    #     application_reference_id = saved_application_instance.application_reference_id,
+                    #     description = "Your scholarship application has been submitted and received by our system.",
+                    #     current_step = 1,
+                    #     is_active = True
+                    # )
 
                     response_data = {
                         'status': 'success',
@@ -548,6 +557,8 @@ class EligibleApplicationDetailAPIView(RetrieveUpdateAPIView):
             
             if instance.applicant_status == "NEW APPLICANT" and instance.application_status == "ACCEPTED":
                 supply_account.apply_async(args=[instance.id])
+            elif instance.applicant_status == "RENEWING APPLICANT" and instance.application_status == "ACCEPTED":
+                update_scholar_profile.apply_async(args=[instance.id])
 
             existing_status_updates = StatusUpdate.objects.filter(application_reference_id=instance.application_reference_id, is_active=True)
             existing_status_updates.update(is_active=False)
@@ -581,15 +592,6 @@ class TrackingView(ListAPIView):
 
     permission_classes = [permissions.AllowAny, ]
     serializer_class = StatusUpdateSerializer
-
-    # Old code
-    # def get_queryset(self):
-    #     application_reference_id = self.kwargs.get('application_reference_id')
-        
-    #     if not self.application_reference_id_exists(application_reference_id):
-    #         return Response({'error': 'Application does not exist'}, status=status.HTTP_404_NOT_FOUND)
-
-    #     return StatusUpdate.objects.filter(application_reference_id=application_reference_id)
 
     def get(self, request, *args, **kwargs):
         application_reference_id = self.kwargs.get('application_reference_id')
@@ -627,16 +629,183 @@ class TrackingView(ListAPIView):
             return False
         
 
-class RenewingForm(APIView):
+class RenewingForm(RetrieveUpdateAPIView):
     """
     Endpoint for enabling the Scholars to RENEW their scholarship application.
     """
 
-    permission_classes = [permissions.IsAuthenticated | IsLinkedApplicationUser]
+    permission_classes = [permissions.IsAuthenticated, ]
+    queryset = Applications.objects.all()
+    serializer_class = ApplicationsRenewalSerializer
 
-    def get(self, request, application_reference_id, *args, **kwargs):
-        application = get_object_or_404(Applications, application_reference_id=application_reference_id)
-        serializer = ApplicationsRenewalSerializer(application)
+    def get_object(self):
+        scholar = self.request.user
+        try:
+            return Applications.objects.get(scholar=scholar)
+        except:
+            return Response({'error': 'Application does not exist for this user'}, status=status.HTTP_404_NOT_FOUND)
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    
+    def update(self, request, *args, **kwargs):
+        partial = request.method == 'PATCH'
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        
+        if serializer.is_valid():
+            data = request.data
+
+            StatusUpdate.objects.filter(application=instance).delete()
+
+            temp_data = {
+                'house_address': data['house_address'],
+                'barangay': data['barangay'],
+                'personalized_facebook_link': data['personalized_facebook_link'],
+
+                # Application Validation Section
+                'semester': data['semester'],
+                        
+                'informative_copy_of_grades_name': data['informative_copy_of_grades'].name,                    # Get file name instead of the whole file for processing
+                'informative_copy_of_grades_content': data['informative_copy_of_grades'].read(),               # Get file content(binary) instead of the whole file for processing
+                #'is_applying_for_merit': data.get('is_applying_for_merit'),
+                'is_applying_for_merit': bool(data.get('is_applying_for_merit')),
+
+                'voter_certificate_name': data['voter_certificate'].name,                                      # Get file name instead of the whole file for processing
+                'voter_certificate_content': data['voter_certificate'].read(),                                 # Get file content(binary) instead of the whole file for processing
+                    
+                # Current Education Section
+                'registration_form_name': data['registration_form'].name,                                      # Get file name instead of the whole file for processing
+                'registration_form_content': data['registration_form'].read(),                                 # Get file content(binary) instead of the whole file for processing
+                        
+                'total_units_enrolled': data['total_units_enrolled'],
+                #'is_ladderized': data.get('is_ladderized'),
+                'is_ladderized': bool(data.get('is_ladderized')),
+                    
+                'year_level': data['year_level'],
+                #'is_graduating': data.get('is_graduating'),
+                'is_graduating': bool(data.get('is_graduating')),
+                'course_duration': data['course_duration'],
+
+                # Guardian's Background Section
+                'guardian_complete_name': data['guardian_complete_name'],
+                'guardian_complete_address': data['guardian_complete_address'],
+                'guardian_contact_number': data['guardian_contact_number'],
+                'guardian_occupation': data['guardian_occupation'],
+                'guardian_place_of_work': data['guardian_place_of_work'],
+                'guardian_educational_attainment': data['guardian_educational_attainment'],
+
+                'guardians_voter_certificate_name': data['guardians_voter_certificate'].name,                   # Get file name instead of the whole file for processing
+                'guardians_voter_certificate_content': data['guardians_voter_certificate'].read(),              # Get file content(binary) instead of the whole file for processing
+
+                # Miscellaneous Section
+                'number_of_semesters_before_graduating': data['number_of_semesters_before_graduating'],
+                'transferee': data['transferee'],
+                'shiftee': data['shiftee'],
+                'student_status': data['student_status'],
+            }
+                    
+            # Execute OCR scripts
+            extracted_voters_data = extract_applicant_voters(temp_data['voter_certificate_content'], temp_data['voter_certificate_name'])
+            extracted_guardian_info_data = extract_guardian_voters(temp_data['guardians_voter_certificate_content'], temp_data['guardians_voter_certificate_name'])
+
+            if extracted_voters_data and extracted_guardian_info_data:
+                    temp_data.update(extracted_voters_data)
+                    temp_data.update(extracted_guardian_info_data)
+
+                    # Files or Images that needs to be converted to Base64 for Serialization upon POST() method
+                    informative_copy_of_grades_content = temp_data['informative_copy_of_grades_content']
+                    voter_certificate_content = temp_data['voter_certificate_content']
+                    registration_form_content = temp_data['registration_form_content']
+                    guardians_voter_certificate_content = temp_data['guardians_voter_certificate_content']
+
+                    if informative_copy_of_grades_content and voter_certificate_content and registration_form_content and guardians_voter_certificate_content:
+                        # Encode Files to Base64 format
+                        informative_copy_of_grades_content_base64 = base64.b64encode(informative_copy_of_grades_content).decode('utf-8')
+                        voter_certificate_content_base64 = base64.b64encode(voter_certificate_content).decode('utf-8')
+                        registration_form_content_base64 = base64.b64encode(registration_form_content).decode('utf-8')
+                        guardians_voter_certificate_content_base64 = base64.b64encode(guardians_voter_certificate_content).decode('utf-8')
+
+                        # Store files encoded in Base64 format back to the data
+                        temp_data['informative_copy_of_grades_content'] = informative_copy_of_grades_content_base64
+                        temp_data['voter_certificate_content'] = voter_certificate_content_base64
+                        temp_data['registration_form_content'] = registration_form_content_base64
+                        temp_data['guardians_voter_certificate_content'] = guardians_voter_certificate_content_base64
+
+                    partnered_universities_id = data['university_attending']
+                    partnered_universities_instance = PartneredUniversities.objects.get(id=partnered_universities_id)
+                    temp_data['university_attending'] = partnered_universities_instance
+
+                    courses_id = data['course_taking']
+                    courses_instance = Courses.objects.get(id=courses_id)
+                    temp_data['course_taking'] = courses_instance
+
+                    # Fields to exclude when creating the TempApplications instance
+                    exclude_fields = [
+                        'informative_copy_of_grades_name',
+                        'voter_certificate_name',
+                        'registration_form_name',
+                        'guardians_voter_certificate_name',
+                    ]
+
+                    # Remove excluded fields from temp_data
+                    for field in exclude_fields:
+                        temp_data.pop(field, None)
+
+                    temp_data.update(temp_data)
+            
+            serializer.validated_data.update(temp_data)
+            
+            serializer.validated_data['is_eligible'] = False
+            serializer.validated_data['applicant_status'] = Applications.ApplicantStatus.RENEWING_APPLICANT
+            serializer.validated_data['application_status'] = Applications.Status.PENDING
+            serializer.validated_data['evaluated_by'] = None
+
+            saved_application_instance = serializer.save()
+
+            # Send email after saving the instance
+            context = {
+                "firstname": serializer.validated_data.get('firstname'),
+                "lastname": serializer.validated_data.get('lastname'),
+                "application_reference_id": serializer.validated_data.get('application_reference_id')
+            }
+
+            print(context)
+
+            html_message = render_to_string("content/application_received_email.html", context=context)
+            plain_message = strip_tags(html_message)
+
+            message = EmailMultiAlternatives(
+                subject = "Scholarship Application",
+                body = plain_message,
+                from_email = None,
+                to = [serializer.validated_data.get('email_address'),]
+            )
+
+            message.attach_alternative(html_message, "text/html")
+            message.send()
+
+            # Constant values after creation of an Application instance
+            StatusUpdate.objects.create(
+                application = saved_application_instance,
+                application_reference_id = saved_application_instance.application_reference_id,
+                description = "Your scholarship application has been submitted and received by our system.",
+                current_step = 1,
+                is_active = True
+            )
+
+            # Initiate Automated Eligibility Checking
+            application_id = serializer.data.get('id')
+
+            # Trigger Celery task for eligibility checking asynchronously
+            check_eligibility.apply_async(args=[application_id])
+
+            response_data = {
+                        'status': 'success',
+                        'message': 'Data has been successfully updated and saved to the database.',
+                    }
+            return Response(response_data, status=status.HTTP_200_OK)
+        else:
+            response_data = {
+                        'status': 'error',
+                        'message': 'Data validation failed. Please check the submitted data.',
+                        'errors': serializer.errors,
+                    }
+            return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
