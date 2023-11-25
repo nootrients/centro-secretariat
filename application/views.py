@@ -635,6 +635,7 @@ class RenewingForm(RetrieveUpdateAPIView):
     """
 
     permission_classes = [permissions.IsAuthenticated, ]
+    parser_classes = [MultiPartParser, FormParser]
     queryset = Applications.objects.all()
     serializer_class = ApplicationsRenewalSerializer
 
