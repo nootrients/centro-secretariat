@@ -471,7 +471,7 @@ class EligibleApplicationsListAPIView(ListAPIView):
     filter_backends = [DjangoFilterBackend]
     filterset_class = EligibleApplicationsFilter
 
-    template = 'rest_framework/filters/base.html'
+    # template = 'rest_framework/filters/base.html'
 
 
 class EligibleApplicationDetailAPIView(RetrieveUpdateAPIView):
