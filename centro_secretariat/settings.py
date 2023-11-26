@@ -28,10 +28,10 @@ environ.Env.read_env()
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # SECRET_KEY = 'django-insecure-iin#mf8t%p9@p%6qo9#%v*buqal^9xd5vh53)7!w@h#s4ju_4d'
-SECRET_KEY = env('SECRET_KEY')
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
 ALLOWED_HOSTS = ['*']
 
@@ -124,9 +124,10 @@ DATABASES = {
 '''
 
 # Render PostgreSQL database
+database_url = os.environ.get('DATABASE_URL')
 
 DATABASES = {
-    'default': dj_database_url.parse(env('DATABASE_URL'))
+    'default': dj_database_url.parse(database_url)
 }
 
 # Password validation
