@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from application.models import TempApplications, Applications, EligibilityConfig, StatusUpdate
+from application.models import TempApplications, Applications, EligibilityConfig, StatusUpdate, PartneredUniversities
 
 from demographics.serializer import GenderSerializer
 from demographics.models import Gender
@@ -36,6 +36,12 @@ class TempApplicationsSerializer(serializers.ModelSerializer):
         queryset=Gender.objects.all(),
         write_only=True
     )
+
+    # # new
+    # university_attending = serializers.PrimaryKeyRelatedField(
+    #     queryset=PartneredUniversities.objects.all(),
+    #     write_only=True
+    # )
 
     class Meta:
         model = TempApplications

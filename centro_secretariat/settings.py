@@ -97,16 +97,19 @@ WSGI_APPLICATION = "centro_secretariat.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+# External Connection
+# postgres://centro_secretariat_render_db_user:HUD0h4sDAz3B2VfGzRGlf24VucS270MA@dpg-clhdvg58td7s73bnv6l0-a.singapore-postgres.render.com/centro_secretariat_render_db
+
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-        #'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        #'NAME': 'db_centro_secretariat',
-        #'USER': 'postgres',
-        #'PASSWORD': 'centrosecretariat',
-        #'HOST': 'localhost', 
-        #'PORT': '5432',
+        #"ENGINE": "django.db.backends.sqlite3",
+        #"NAME": BASE_DIR / "db.sqlite3",
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'centro_secretariat_db',
+        'USER': 'postgres',
+        'PASSWORD': 'centrosecretariat',
+        'HOST': 'localhost', 
+        'PORT': '5432',
     }
 }
 

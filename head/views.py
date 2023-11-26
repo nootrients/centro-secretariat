@@ -36,10 +36,10 @@ class DashboardDataView(APIView):
         # Total number of applicants
         total_applicants_count = Applications.objects.filter(application_status="ACCEPTED").count()
         new_applicants_count = Applications.objects.filter(applicant_status=Applications.ApplicantStatus.NEW_APPLICANT, application_status="ACCEPTED").count()
-        renewing_applicants_count = Applications.objects.filter(applicant_status=Applications.ApplicantStatus.NEW_APPLICANT, application_status="ACCEPTED").count()
+        renewing_applicants_count = Applications.objects.filter(applicant_status=Applications.ApplicantStatus.RENEWING_APPLICANT, application_status="ACCEPTED").count()
         graduating_scholars_count = Applications.objects.filter(is_graduating=True).count()
         
-        total_pending_applications_count = Applications.objects.filter(application_status="PENDING").count()
+        total_pending_applications_count = Applications.objects.filter(is_eligible=True, application_status="PENDING").count()
 
         # Per scholarship_type
         scholarship_type_count = (
