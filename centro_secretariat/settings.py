@@ -13,21 +13,27 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 import os
+import dj_database_url
+import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
+env = environ.Env()
+environ.Env.read_env()
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-iin#mf8t%p9@p%6qo9#%v*buqal^9xd5vh53)7!w@h#s4ju_4d'
+# SECRET_KEY = 'django-insecure-iin#mf8t%p9@p%6qo9#%v*buqal^9xd5vh53)7!w@h#s4ju_4d'
+SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -100,6 +106,7 @@ WSGI_APPLICATION = "centro_secretariat.wsgi.application"
 # External Connection
 # postgres://centro_secretariat_render_db_user:HUD0h4sDAz3B2VfGzRGlf24VucS270MA@dpg-clhdvg58td7s73bnv6l0-a.singapore-postgres.render.com/centro_secretariat_render_db
 
+'''
 DATABASES = {
     "default": {
         #"ENGINE": "django.db.backends.sqlite3",
@@ -112,7 +119,13 @@ DATABASES = {
         'PORT': '5432',
     }
 }
+'''
 
+# Render PostgreSQL database
+
+DATABASES = {
+    'default': dj_database_url.parse(env('DATABASE_URL'))
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
