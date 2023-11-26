@@ -39,6 +39,7 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
+    'whitenoise.runserver_nostatic',
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -69,6 +70,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     "django.contrib.sessions.middleware.SessionMiddleware",
     'corsheaders.middleware.CorsMiddleware',
     "django.middleware.common.CommonMiddleware",
@@ -161,7 +163,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = 'static/'
+
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# CORS
 
 CORS_ALLOW_ALL_ORIGINS = True
 
@@ -278,8 +284,10 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = "Centro Secretariat"
-EMAIL_HOST_USER = env('CAPSTONE_EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = env('CAPSTONE_EMAIL_HOST_PASSWORD')
+EMAIL_HOST_USER = env("CAPSTONE_EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = env("CAPSTONE_EMAIL_HOST_PASSWORD")
+# EMAIL_HOST_USER = os.environ.get("CAPSTONE_EMAIL_HOST_USER")
+# EMAIL_HOST_PASSWORD = os.environ.get("CAPSTONE_EMAIL_HOST_PASSWORD")
 
 CSV_DIRECTORY = Path("survey_reports/csv/")
 TEX_DIRECTORY = Path("survey_reports/tex/")
