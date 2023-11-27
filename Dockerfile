@@ -1,11 +1,14 @@
 # Use an official Python runtime as a parent image
-FROM python:3.9-slim-buster
+# FROM python:3.9-slim-buster
 
 # Update package lists and install Tesseract OCR and its development library
-RUN apt-get update && \
-    apt-get -qq -y install tesseract-ocr && \
-    apt-get -qq -y install libtesseract-dev && \
-    apt-get -qq -y install libgl1-mesa-glx
+# RUN apt-get update && \
+#     apt-get -qq -y install tesseract-ocr && \
+#     apt-get -qq -y install libtesseract-dev && \
+#     apt-get -qq -y install libgl1-mesa-glx
+
+# Use the Franky1 Tesseract OCR Docker image with Tesseract 5.3.3
+FROM franky1/tesseract:5.3.3
 
 # Check the installed Tesseract version
 RUN tesseract --version
