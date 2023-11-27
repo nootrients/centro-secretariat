@@ -23,4 +23,4 @@ RUN pip3 install -r requirements.txt
 COPY . .
 
 # Specify the default command to run on container startup
-CMD ["gunicorn", "centro_secretariat.wsgi:application"]
+CMD ["gunicorn", "centro_secretariat.wsgi:application", "--timeout", "120"]
