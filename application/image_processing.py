@@ -200,7 +200,7 @@ def extract_id_info(national_id_content, national_id_name):
                             'Viga Pangatan/G:ven Nomes', 'Viga Pangatan: G:ven Nomes', 'Viga Pangatan/G:ven Nomes.', 'Viga Pangatan: G:ven Nomes.', 'Viga Pangatan/G:ven Nomes:', 'Viga Pangatan: G:ven Nomes:',
                             ]),
 
-                ('middlename', ['Gitnang Apelyido/Middle Name', 'Gitnang Apelyido: Middle Name', 'Gitnang Apelyido/Middle Name.', 'Gitnang Apelyido: Middle Name.', 'Gitnang Apelyido/Middle Name:', 'Gitnang Apelyido: Middle Name:',
+                ('middlename', ['Gitnang Apelyido/Middle Name', 'Gitnang Apelyido: Middle Name', 'Gitnang Apelyido/Middle Name.', 'Gitnang Apelyido: Middle Name.', 'Gitnang Apelyido/Middle Name:', 'Gitnang Apelyido: Middle Name:', 
                                 'G:tnang Apelyido/Middle Name', 'G:tnang Apelyido: Middle Name', 'G:tnang Apelyido/Middle Name.', 'G:tnang Apelyido: Middle Name.', 'G:tnang Apelyido/Middle Name:', 'G:tnang Apelyido: Middle Name:',
                                 'Gitnang Apely:do/Middle Name', 'Gitnang Apely:do: Middle Name', 'Gitnang Apely:do/Middle Name.', 'Gitnang Apely:do: Middle Name.', 'Gitnang Apely:do/Middle Name:', 'Gitnang Apely:do: Middle Name:',
                                 'Gitnang Apelyido/M:ddle Name', 'Gitnang Apelyido: M:ddle Name', 'Gitnang Apelyido/M:ddle Name.', 'Gitnang Apelyido: M:ddle Name.', 'Gitnang Apelyido/M:ddle Name:', 'Gitnang Apelyido: M:ddle Name:',
@@ -345,6 +345,12 @@ def extract_id_info(national_id_content, national_id_name):
                                 'ailnang Apelyido/Midale Nome', 'ailnang Apelyido: Midale Nome', 'ailnang Apelyido/Midale Nome.', 'ailnang Apelyido: Midale Nome.', 'ailnang Apelyido/Midale Nome:', 'ailnang Apelyido: Midale Nome:',
                                 'ailnang Apeiyido/Midale Nome', 'ailnang Apeiyido: Midale Nome', 'ailnang Apeiyido/Midale Nome.', 'ailnang Apeiyido: Midale Nome.', 'ailnang Apeiyido/Midale Nome:', 'ailnang Apeiyido: Midale Nome:',
                                 'ailnang Apetyido/Midale Nome', 'ailnang Apetyido: Midale Nome', 'ailnang Apetyido/Midale Nome.', 'ailnang Apetyido: Midale Nome.', 'ailnang Apetyido/Midale Nome:', 'ailnang Apetyido: Midale Nome:',
+                            
+                                'aitnang Apelyido/Middie Name', 'aitnang Apelyido;Middie Name', 'aitnang Apelyido:Middie Name', 'aitnang Apelyido/ Middie Name', 'aitnang Apelyido; Middie Name', 'aitnang Apelyido: Middie Name',
+                                'aitnang Apeiyido/Middie Name', 'aitnang Apeiyido;Middie Name', 'aitnang Apeiyido:Middie Name', 'aitnang Apeiyido/ Middie Name', 'aitnang Apeiyido; Middie Name', 'aitnang Apeiyido: Middie Name',
+                                
+                                'aitnang Apelyido/Middie Nome', 'aitnang Apelyido;Middie Nome', 'aitnang Apelyido:Middie Name', 'aitnang Apelyido/ Middie Name', 'aitnang Apelyido; Middie Name', 'aitnang Apelyido: Middie Name',
+                                'aitnang Apeiyido/Middie Nome', 'aitnang Apeiyido;Middie Nome', 'aitnang Apeiyido:Middie Name', 'aitnang Apeiyido/ Middie Name', 'aitnang Apeiyido; Middie Name', 'aitnang Apeiyido: Middie Name',
                             ]),
             ]
 
@@ -448,6 +454,7 @@ def extract_applicant_voters(voter_certificate_content, voter_certificate_name):
             
             residency_pattern = r"(\d+ year\(s\))"
             voters_issued_at_pattern = r"\s+(.+?)(?=\n|$)"
+            # voters_issuance_date_pattern = r"(\d{2}/\d{2}/\d{4})"
             voters_issuance_date_pattern = r"(\d{2}/\d{2}/\d{4})"
             
             residency_field_pattern = [
@@ -588,23 +595,23 @@ def extract_applicant_voters(voter_certificate_content, voter_certificate_name):
                     'Oote lssued : ', 'Oote lssued ; ', 'Oote lssued . ', 
                     'Oole Issued : ', 'Oole Issued ; ', 'Oole Issued . ', 
                     'Oole lssued : ', 'Oole lssued ; ', 'Oole lssued . ', 
-                    
-                    'Date Issued ', 'Date Issued ', 'Date Issued ', 
-                    'Dote Issued ', 'Dote Issued ', 'Dote Issued ', 
-                    'Date lssued ', 'Date lssued ', 'Date lssued ', 
-                    'Dote lssued ', 'Dote lssued ', 'Dote lssued ', 
-                    'Dale Issued ', 'Dale Issued ', 'Dale Issued ', 
-                    'Dale lssued ', 'Dale lssued ', 'Dale lssued ', 
-                    'Dole Issued ', 'Dole Issued ', 'Dole Issued ', 
-                    'Dole lssued ', 'Dole lssued ', 'Dole lssued ', 
-                    'Oate Issued ', 'Oate Issued ', 'Oate Issued ', 
-                    'Oate lssued ', 'Oate lssued ', 'Oate lssued ', 
-                    'Oale Issued ', 'Oale Issued ', 'Oale Issued ', 
-                    'Oale lssued ', 'Oale lssued ', 'Oale lssued ', 
-                    'Oote Issued ', 'Oote Issued ', 'Oote Issued ', 
-                    'Oote lssued ', 'Oote lssued ', 'Oote lssued ', 
-                    'Oole Issued ', 'Oole Issued ', 'Oole Issued ', 
-                    'Oole lssued ', 'Oole lssued ', 'Oole lssued ', 
+            
+                    'Date Issued ', 'Date Issued', 
+                    'Dote Issued ', 'Dote Issued', 
+                    'Date lssued ', 'Date lssued', 
+                    'Dote lssued ', 'Dote lssued', 
+                    'Dale Issued ', 'Dale Issued', 
+                    'Dale lssued ', 'Dale lssued', 
+                    'Dole Issued ', 'Dole Issued', 
+                    'Dole lssued ', 'Dole lssued', 
+                    'Oate Issued ', 'Oate Issued', 
+                    'Oate lssued ', 'Oate lssued', 
+                    'Oale Issued ', 'Oale Issued', 
+                    'Oale lssued ', 'Oale lssued', 
+                    'Oote Issued ', 'Oote Issued', 
+                    'Oote lssued ', 'Oote lssued', 
+                    'Oole Issued ', 'Oole Issued', 
+                    'Oole lssued ', 'Oole lssued', 
                 ]
             
 
