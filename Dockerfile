@@ -4,7 +4,11 @@ FROM python:3.9-slim-buster
 # Update package lists and install Tesseract OCR and its development library
 RUN apt-get update && \
     apt-get -qq -y install tesseract-ocr && \
-    apt-get -qq -y install libtesseract-dev
+    apt-get -qq -y install libtesseract-dev && \
+    apt-get -qq -y install libgl1-mesa-glx
+
+# Check the installed Tesseract version
+RUN tesseract --version
 
 # Set the working directory in the container
 WORKDIR /app
