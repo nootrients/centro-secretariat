@@ -12,7 +12,11 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 
 
 # CONSTANTS
-pytesseract.pytesseract.tesseract_cmd = "C:/Program Files/Tesseract-OCR/tesseract.exe"
+
+# Only on local development
+# Dockerfile will handle this on deployment
+# pytesseract.pytesseract.tesseract_cmd = "C:/Program Files/Tesseract-OCR/tesseract.exe"
+
 logging.basicConfig(level=logging.DEBUG)
 
 def extract_id_info(national_id_content, national_id_name):
