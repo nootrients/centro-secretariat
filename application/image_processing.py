@@ -89,7 +89,7 @@ def extract_id_info(national_id_content, national_id_name):
 
             image_to_text = pytesseract.image_to_string(no_noise, lang='eng')
             
-            logging.debug(f"Text Extracted: {image_to_text}")
+            # logging.debug(f"Text Extracted: {image_to_text}")
             
             # Initializing variable (list) to store extracted data from the ID
             extracted_info = {
@@ -272,6 +272,79 @@ def extract_id_info(national_id_content, national_id_name):
                                 'Gilnang Apelyido/Midale Nome', 'Gilnang Apelyido: Midale Nome', 'Gilnang Apelyido/Midale Nome.', 'Gilnang Apelyido: Midale Nome.', 'Gilnang Apelyido/Midale Nome:', 'Gilnang Apelyido: Midale Nome:',
                                 'Gilnang Apeiyido/Midale Nome', 'Gilnang Apeiyido: Midale Nome', 'Gilnang Apeiyido/Midale Nome.', 'Gilnang Apeiyido: Midale Nome.', 'Gilnang Apeiyido/Midale Nome:', 'Gilnang Apeiyido: Midale Nome:',
                                 'Gilnang Apetyido/Midale Nome', 'Gilnang Apetyido: Midale Nome', 'Gilnang Apetyido/Midale Nome.', 'Gilnang Apetyido: Midale Nome.', 'Gilnang Apetyido/Midale Nome:', 'Gilnang Apetyido: Midale Nome:',
+
+                                'aitnang Apelyido/Middle Name', 'aitnang Apelyido: Middle Name', 'aitnang Apelyido/Middle Name.', 'aitnang Apelyido: Middle Name.', 'aitnang Apelyido/Middle Name:', 'aitnang Apelyido: Middle Name:',
+                                'a:tnang Apelyido/Middle Name', 'a:tnang Apelyido: Middle Name', 'a:tnang Apelyido/Middle Name.', 'a:tnang Apelyido: Middle Name.', 'a:tnang Apelyido/Middle Name:', 'a:tnang Apelyido: Middle Name:',
+                                'aitnang Apely:do/Middle Name', 'aitnang Apely:do: Middle Name', 'aitnang Apely:do/Middle Name.', 'aitnang Apely:do: Middle Name.', 'aitnang Apely:do/Middle Name:', 'aitnang Apely:do: Middle Name:',
+                                'aitnang Apelyido/M:ddle Name', 'aitnang Apelyido: M:ddle Name', 'aitnang Apelyido/M:ddle Name.', 'aitnang Apelyido: M:ddle Name.', 'aitnang Apelyido/M:ddle Name:', 'aitnang Apelyido: M:ddle Name:',
+                                'a:tnang Apely:do/Middle Name', 'a:tnang Apely:do: Middle Name', 'a:tnang Apely:do/Middle Name.', 'a:tnang Apely:do: Middle Name.', 'a:tnang Apely:do/Middle Name:', 'a:tnang Apely:do: Middle Name:',
+                                'aitnang Apely:do/M:ddle Name', 'aitnang Apely:do: M:ddle Name', 'aitnang Apely:do/M:ddle Name.', 'aitnang Apely:do: M:ddle Name.', 'aitnang Apely:do/M:ddle Name:', 'aitnang Apely:do: M:ddle Name:',
+                                'aitnang Apelyido/Middle Nome', 'aitnang Apelyido: Middle Nome', 'aitnang Apelyido/Middle Nome.', 'aitnang Apelyido: Middle Nome.', 'aitnang Apelyido/Middle Nome:', 'aitnang Apelyido: Middle Nome:',
+                                'a:tnang Apelyido/Middle Nome', 'a:tnang Apelyido: Middle Nome', 'a:tnang Apelyido/Middle Nome.', 'a:tnang Apelyido: Middle Nome.', 'a:tnang Apelyido/Middle Nome:', 'a:tnang Apelyido: Middle Nome:',
+                                'aitnang Apely:do/Middle Nome', 'aitnang Apely:do: Middle Nome', 'aitnang Apely:do/Middle Nome.', 'aitnang Apely:do: Middle Nome.', 'aitnang Apely:do/Middle Nome:', 'aitnang Apely:do: Middle Nome:',
+                                'aitnang Apelyido/M:ddle Nome', 'aitnang Apelyido: M:ddle Nome', 'aitnang Apelyido/M:ddle Nome.', 'aitnang Apelyido: M:ddle Nome.', 'aitnang Apelyido/M:ddle Nome:', 'aitnang Apelyido: M:ddle Nome:',
+                                'a:tnang Apely:do/Middle Nome', 'a:tnang Apely:do: Middle Nome', 'a:tnang Apely:do/Middle Nome.', 'a:tnang Apely:do: Middle Nome.', 'a:tnang Apely:do/Middle Nome:', 'a:tnang Apely:do: Middle Nome:',
+                                'aitnang Apely:do/M:ddle Nome', 'aitnang Apely:do: M:ddle Nome', 'aitnang Apely:do/M:ddle Nome.', 'aitnang Apely:do: M:ddle Nome.', 'aitnang Apely:do/M:ddle Nome:', 'aitnang Apely:do: M:ddle Nome:',
+
+                                'aitnang Apelyido/Middie Name', 'aitnang Apelyido: Middie Name', 'aitnang Apelyido/Middie Name.', 'aitnang Apelyido: Middie Name.', 'aitnang Apelyido/Middie Name:', 'aitnang Apelyido: Middie Name:',
+                                'aitnang Apeiyido/Middie Name', 'aitnang Apeiyido: Middie Name', 'aitnang Apeiyido/Middie Name.', 'aitnang Apeiyido: Middie Name.', 'aitnang Apeiyido/Middie Name:', 'aitnang Apeiyido: Middie Name:',
+                                'aitnang Apelyido/Middie Nome', 'aitnang Apelyido: Middie Nome', 'aitnang Apelyido/Middie Nome.', 'aitnang Apelyido: Middie Nome.', 'aitnang Apelyido/Middie Nome:', 'aitnang Apelyido: Middie Nome:',
+                                'aitnang Apeiyido/Middie Nome', 'aitnang Apeiyido: Middie Nome', 'aitnang Apeiyido/Middie Nome.', 'aitnang Apeiyido: Middie Nome.', 'aitnang Apeiyido/Middie Nome:', 'aitnang Apeiyido: Middie Nome:',
+                                'ailnang Apelyido/Middie Name', 'ailnang Apelyido: Middie Name', 'ailnang Apelyido/Middie Name.', 'ailnang Apelyido: Middie Name.', 'ailnang Apelyido/Middie Name:', 'ailnang Apelyido: Middie Name:',
+                                'ailnang Apeiyido/Middie Name', 'ailnang Apeiyido: Middie Name', 'ailnang Apeiyido/Middie Name.', 'ailnang Apeiyido: Middie Name.', 'ailnang Apeiyido/Middie Name:', 'ailnang Apeiyido: Middie Name:',
+                                'ailnang Apelyido/Middie Nome', 'ailnang Apelyido: Middie Nome', 'ailnang Apelyido/Middie Nome.', 'ailnang Apelyido: Middie Nome.', 'ailnang Apelyido/Middie Nome:', 'ailnang Apelyido: Middie Nome:',
+                                'ailnang Apeiyido/Middie Nome', 'ailnang Apeiyido: Middie Nome', 'ailnang Apeiyido/Middie Nome.', 'ailnang Apeiyido: Middie Nome.', 'ailnang Apeiyido/Middie Nome:', 'ailnang Apeiyido: Middie Nome:',
+                                'a:tnang Apelyido/Middie Name', 'a:tnang Apelyido: Middie Name', 'a:tnang Apelyido/Middie Name.', 'a:tnang Apelyido: Middie Name.', 'a:tnang Apelyido/Middie Name:', 'a:tnang Apelyido: Middie Name:',
+                                'a:tnang Apeiyido/Middie Name', 'a:tnang Apeiyido: Middie Name', 'a:tnang Apeiyido/Middie Name.', 'a:tnang Apeiyido: Middie Name.', 'a:tnang Apeiyido/Middie Name:', 'a:tnang Apeiyido: Middie Name:',
+                                'a:tnang Apelyido/Middie Nome', 'a:tnang Apelyido: Middie Nome', 'a:tnang Apelyido/Middie Nome.', 'a:tnang Apelyido: Middie Nome.', 'a:tnang Apelyido/Middie Nome:', 'a:tnang Apelyido: Middie Nome:',
+                                'a:tnang Apeiyido/Middie Nome', 'a:tnang Apeiyido: Middie Nome', 'a:tnang Apeiyido/Middie Nome.', 'a:tnang Apeiyido: Middie Nome.', 'a:tnang Apeiyido/Middie Nome:', 'a:tnang Apeiyido: Middie Nome:',
+                                'a:lnang Apelyido/Middie Name', 'a:lnang Apelyido: Middie Name', 'a:lnang Apelyido/Middie Name.', 'a:lnang Apelyido: Middie Name.', 'a:lnang Apelyido/Middie Name:', 'a:lnang Apelyido: Middie Name:',
+                                'a:lnang Apeiyido/Middie Name', 'a:lnang Apeiyido: Middie Name', 'a:lnang Apeiyido/Middie Name.', 'a:lnang Apeiyido: Middie Name.', 'a:lnang Apeiyido/Middie Name:', 'a:lnang Apeiyido: Middie Name:',
+                                'a:lnang Apelyido/Middie Nome', 'a:lnang Apelyido: Middie Nome', 'a:lnang Apelyido/Middie Nome.', 'a:lnang Apelyido: Middie Nome.', 'a:lnang Apelyido/Middie Nome:', 'a:lnang Apelyido: Middie Nome:',
+                                'a:lnang Apeiyido/Middie Nome', 'a:lnang Apeiyido: Middie Nome', 'a:lnang Apeiyido/Middie Nome.', 'a:lnang Apeiyido: Middie Nome.', 'a:lnang Apeiyido/Middie Nome:', 'a:lnang Apeiyido: Middie Nome:',
+                                'a:tnang Apely:do/Middie Name', 'a:tnang Apely:do: Middie Name', 'a:tnang Apely:do/Middie Name.', 'a:tnang Apely:do: Middie Name.', 'a:tnang Apely:do/Middie Name:', 'a:tnang Apely:do: Middie Name:',
+                                'a:tnang Apeiy:do/Middie Name', 'a:tnang Apeiy:do: Middie Name', 'a:tnang Apeiy:do/Middie Name.', 'a:tnang Apeiy:do: Middie Name.', 'a:tnang Apeiy:do/Middie Name:', 'a:tnang Apeiy:do: Middie Name:',
+                                'a:tnang Apely:do/Middie Nome', 'a:tnang Apely:do: Middie Nome', 'a:tnang Apely:do/Middie Nome.', 'a:tnang Apely:do: Middie Nome.', 'a:tnang Apely:do/Middie Nome:', 'a:tnang Apely:do: Middie Nome:',
+                                'a:tnang Apeiy:do/Middie Nome', 'a:tnang Apeiy:do: Middie Nome', 'a:tnang Apeiy:do/Middie Nome.', 'a:tnang Apeiy:do: Middie Nome.', 'a:tnang Apeiy:do/Middie Nome:', 'a:tnang Apeiy:do: Middie Nome:',
+                                'a:lnang Apely:do/Middie Name', 'a:lnang Apely:do: Middie Name', 'a:lnang Apely:do/Middie Name.', 'a:lnang Apely:do: Middie Name.', 'a:lnang Apely:do/Middie Name:', 'a:lnang Apely:do: Middie Name:',
+                                'a:lnang Apeiy:do/Middie Name', 'a:lnang Apeiy:do: Middie Name', 'a:lnang Apeiy:do/Middie Name.', 'a:lnang Apeiy:do: Middie Name.', 'a:lnang Apeiy:do/Middie Name:', 'a:lnang Apeiy:do: Middie Name:',
+                                'a:lnang Apely:do/Middie Nome', 'a:lnang Apely:do: Middie Nome', 'a:lnang Apely:do/Middie Nome.', 'a:lnang Apely:do: Middie Nome.', 'a:lnang Apely:do/Middie Nome:', 'a:lnang Apely:do: Middie Nome:',
+                                'a:lnang Apeiy:do/Middie Nome', 'a:lnang Apeiy:do: Middie Nome', 'a:lnang Apeiy:do/Middie Nome.', 'a:lnang Apeiy:do: Middie Nome.', 'a:lnang Apeiy:do/Middie Nome:', 'a:lnang Apeiy:do: Middie Nome:',
+                                
+                                'aitnang Apelyrdo/Middie Name', 'aitnang Apelyrdo: Middie Name', 'aitnang Apelyrdo/Middie Name.', 'aitnang Apelyrdo: Middie Name.', 'aitnang Apelyrdo/Middie Name:', 'aitnang Apelyrdo: Middie Name:', 
+                                'aitnang Apeiyrdo/Middie Name', 'aitnang Apeiyrdo: Middie Name', 'aitnang Apeiyrdo/Middie Name.', 'aitnang Apeiyrdo: Middie Name.', 'aitnang Apeiyrdo/Middie Name:', 'aitnang Apeiyrdo: Middie Name:', 
+                                'aitnang Apelyrdo/Middie Nome', 'aitnang Apelyrdo: Middie Nome', 'aitnang Apelyrdo/Middie Nome.', 'aitnang Apelyrdo: Middie Nome.', 'aitnang Apelyrdo/Middie Nome:', 'aitnang Apelyrdo: Middie Nome:', 
+                                'aitnang Apeiyrdo/Middie Nome', 'aitnang Apeiyrdo: Middie Nome', 'aitnang Apeiyrdo/Middie Nome.', 'aitnang Apeiyrdo: Middie Nome.', 'aitnang Apeiyrdo/Middie Nome:', 'aitnang Apeiyrdo: Middie Nome:', 
+                                'ailnang Apelyrdo/Middie Name', 'ailnang Apelyrdo: Middie Name', 'ailnang Apelyrdo/Middie Name.', 'ailnang Apelyrdo: Middie Name.', 'ailnang Apelyrdo/Middie Name:', 'ailnang Apelyrdo: Middie Name:', 
+                                'ailnang Apeiyrdo/Middie Name', 'ailnang Apeiyrdo: Middie Name', 'ailnang Apeiyrdo/Middie Name.', 'ailnang Apeiyrdo: Middie Name.', 'ailnang Apeiyrdo/Middie Name:', 'ailnang Apeiyrdo: Middie Name:', 
+                                'ailnang Apelyrdo/Middie Nome', 'ailnang Apelyrdo: Middie Nome', 'ailnang Apelyrdo/Middie Nome.', 'ailnang Apelyrdo: Middie Nome.', 'ailnang Apelyrdo/Middie Nome:', 'ailnang Apelyrdo: Middie Nome:', 
+                                'ailnang Apeiyrdo/Middie Nome', 'ailnang Apeiyrdo: Middie Nome', 'ailnang Apeiyrdo/Middie Nome.', 'ailnang Apeiyrdo: Middie Nome.', 'ailnang Apeiyrdo/Middie Nome:', 'ailnang Apeiyrdo: Middie Nome:', 
+
+                                'aitnang Apelyido/Midalie Name', 'aitnang Apelyido: Midalie Name', 'aitnang Apelyido/Midalie Name.', 'aitnang Apelyido: Midalie Name.', 'aitnang Apelyido/Midalie Name:', 'aitnang Apelyido: Midalie Name:',
+                                'aitnang Apeiyido/Midalie Name', 'aitnang Apeiyido: Midalie Name', 'aitnang Apeiyido/Midalie Name.', 'aitnang Apeiyido: Midalie Name.', 'aitnang Apeiyido/Midalie Name:', 'aitnang Apeiyido: Midalie Name:',
+                                'aitnang Apelyido/Midalie Nome', 'aitnang Apelyido: Midalie Nome', 'aitnang Apelyido/Midalie Nome.', 'aitnang Apelyido: Midalie Nome.', 'aitnang Apelyido/Midalie Nome:', 'aitnang Apelyido: Midalie Nome:',
+                                'aitnang Apeiyido/Midalie Nome', 'aitnang Apeiyido: Midalie Nome', 'aitnang Apeiyido/Midalie Nome.', 'aitnang Apeiyido: Midalie Nome.', 'aitnang Apeiyido/Midalie Nome:', 'aitnang Apeiyido: Midalie Nome:',
+                                'ailnang Apelyido/Midalie Name', 'ailnang Apelyido: Midalie Name', 'ailnang Apelyido/Midalie Name.', 'ailnang Apelyido: Midalie Name.', 'ailnang Apelyido/Midalie Name:', 'ailnang Apelyido: Midalie Name:',
+                                'ailnang Apeiyido/Midalie Name', 'ailnang Apeiyido: Midalie Name', 'ailnang Apeiyido/Midalie Name.', 'ailnang Apeiyido: Midalie Name.', 'ailnang Apeiyido/Midalie Name:', 'ailnang Apeiyido: Midalie Name:',
+                                'ailnang Apelyido/Midalie Nome', 'ailnang Apelyido: Midalie Nome', 'ailnang Apelyido/Midalie Nome.', 'ailnang Apelyido: Midalie Nome.', 'ailnang Apelyido/Midalie Nome:', 'ailnang Apelyido: Midalie Nome:',
+                                'ailnang Apeiyido/Midalie Nome', 'ailnang Apeiyido: Midalie Nome', 'ailnang Apeiyido/Midalie Nome.', 'ailnang Apeiyido: Midalie Nome.', 'ailnang Apeiyido/Midalie Nome:', 'ailnang Apeiyido: Midalie Nome:',
+                                'aitnang Apetyido/Midalie Name', 'aitnang Apetyido: Midalie Name', 'aitnang Apetyido/Midalie Name.', 'aitnang Apetyido: Midalie Name.', 'aitnang Apetyido/Midalie Name:', 'aitnang Apetyido: Midalie Name:',
+                                'aitnang Apetyido/Midalie Nome', 'aitnang Apetyido: Midalie Nome', 'aitnang Apetyido/Midalie Nome.', 'aitnang Apetyido: Midalie Nome.', 'aitnang Apetyido/Midalie Nome:', 'aitnang Apetyido: Midalie Nome:',
+                                'ailnang Apetyido/Midalie Name', 'ailnang Apetyido: Midalie Name', 'ailnang Apetyido/Midalie Name.', 'ailnang Apetyido: Midalie Name.', 'ailnang Apetyido/Midalie Name:', 'ailnang Apetyido: Midalie Name:',
+                                'ailnang Apetyido/Midalie Nome', 'ailnang Apetyido: Midalie Nome', 'ailnang Apetyido/Midalie Nome.', 'ailnang Apetyido: Midalie Nome.', 'ailnang Apetyido/Midalie Nome:', 'ailnang Apetyido: Midalie Nome:',
+
+                                'aitnang Apelyido/Midale Name', 'aitnang Apelyido: Midale Name', 'aitnang Apelyido/Midale Name.', 'aitnang Apelyido: Midale Name.', 'aitnang Apelyido/Midale Name:', 'aitnang Apelyido: Midale Name:',
+                                'aitnang Apeiyido/Midale Name', 'aitnang Apeiyido: Midale Name', 'aitnang Apeiyido/Midale Name.', 'aitnang Apeiyido: Midale Name.', 'aitnang Apeiyido/Midale Name:', 'aitnang Apeiyido: Midale Name:',
+                                'aitnang Apetyido/Midale Name', 'aitnang Apetyido: Midale Name', 'aitnang Apetyido/Midale Name.', 'aitnang Apetyido: Midale Name.', 'aitnang Apetyido/Midale Name:', 'aitnang Apetyido: Midale Name:',
+                                'aitnang Apelyido/Midale Nome', 'aitnang Apelyido: Midale Nome', 'aitnang Apelyido/Midale Nome.', 'aitnang Apelyido: Midale Nome.', 'aitnang Apelyido/Midale Nome:', 'aitnang Apelyido: Midale Nome:',
+                                'aitnang Apeiyido/Midale Nome', 'aitnang Apeiyido: Midale Nome', 'aitnang Apeiyido/Midale Nome.', 'aitnang Apeiyido: Midale Nome.', 'aitnang Apeiyido/Midale Nome:', 'aitnang Apeiyido: Midale Nome:',
+                                'aitnang Apetyido/Midale Nome', 'aitnang Apetyido: Midale Nome', 'aitnang Apetyido/Midale Nome.', 'aitnang Apetyido: Midale Nome.', 'aitnang Apetyido/Midale Nome:', 'aitnang Apetyido: Midale Nome:', 
+                                'ailnang Apelyido/Midale Name', 'ailnang Apelyido: Midale Name', 'ailnang Apelyido/Midale Name.', 'ailnang Apelyido: Midale Name.', 'ailnang Apelyido/Midale Name:', 'ailnang Apelyido: Midale Name:',
+                                'ailnang Apeiyido/Midale Name', 'ailnang Apeiyido: Midale Name', 'ailnang Apeiyido/Midale Name.', 'ailnang Apeiyido: Midale Name.', 'ailnang Apeiyido/Midale Name:', 'ailnang Apeiyido: Midale Name:',
+                                'ailnang Apetyido/Midale Name', 'ailnang Apetyido: Midale Name', 'ailnang Apetyido/Midale Name.', 'ailnang Apetyido: Midale Name.', 'ailnang Apetyido/Midale Name:', 'ailnang Apetyido: Midale Name:',
+                                'ailnang Apelyido/Midale Nome', 'ailnang Apelyido: Midale Nome', 'ailnang Apelyido/Midale Nome.', 'ailnang Apelyido: Midale Nome.', 'ailnang Apelyido/Midale Nome:', 'ailnang Apelyido: Midale Nome:',
+                                'ailnang Apeiyido/Midale Nome', 'ailnang Apeiyido: Midale Nome', 'ailnang Apeiyido/Midale Nome.', 'ailnang Apeiyido: Midale Nome.', 'ailnang Apeiyido/Midale Nome:', 'ailnang Apeiyido: Midale Nome:',
+                                'ailnang Apetyido/Midale Nome', 'ailnang Apetyido: Midale Nome', 'ailnang Apetyido/Midale Nome.', 'ailnang Apetyido: Midale Nome.', 'ailnang Apetyido/Midale Nome:', 'ailnang Apetyido: Midale Nome:',
                             ]),
             ]
 
@@ -363,6 +436,8 @@ def extract_applicant_voters(voter_certificate_content, voter_certificate_name):
             #============================================================================
 
             image_to_text = pytesseract.image_to_string(dilated, lang='eng')
+
+            logging.debug(f"Text Extracted: {image_to_text}")
 
             # Initializing variable (list) to store extracted data from the ID
             extracted_info = {
