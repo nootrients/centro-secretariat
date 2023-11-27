@@ -1,5 +1,5 @@
 # Use an official Python runtime as a parent image
-# FROM python:3.9-slim-buster
+FROM python:3.9-slim-buster
 
 # Update package lists and install Tesseract OCR and its development library
 # RUN apt-get update && \
