@@ -275,3 +275,5 @@ EMAIL_HOST_PASSWORD = env("CAPSTONE_EMAIL_HOST_PASSWORD")
 CSV_DIRECTORY = Path("survey_reports/csv/")
 TEX_DIRECTORY = Path("survey_reports/tex/")
 # TEX_CONFIGURATION_FILE = os.path.join(ROOT, "docs", "tex_conf.yaml")
+
+CSRF_TRUSTED_ORIGINS=['https://centrosecretariat-docker.onrender.com']
