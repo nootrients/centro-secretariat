@@ -1,5 +1,5 @@
 # Use an official Python runtime as a parent image
-FROM python:3.9-slim-buster
+# FROM python:3.9-slim-buster
 
 # Update package lists and install Tesseract OCR and its development library
 # RUN apt-get update && \
@@ -15,6 +15,9 @@ RUN tesseract --version
 
 # Set the working directory in the container
 WORKDIR /app
+
+# Install Python and pip
+RUN apt-get update && apt-get install -y python3 python3-pip
 
 # Copy the Python dependencies file to the container at /app
 COPY requirements.txt requirements.txt
