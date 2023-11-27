@@ -89,6 +89,8 @@ def extract_id_info(national_id_content, national_id_name):
 
             image_to_text = pytesseract.image_to_string(no_noise, lang='eng')
             
+            logging.debug(f"Text Extracted: {image_to_text}")
+            
             # Initializing variable (list) to store extracted data from the ID
             extracted_info = {
                 'lastname': None,
