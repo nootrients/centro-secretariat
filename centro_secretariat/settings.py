@@ -31,7 +31,7 @@ environ.Env.read_env()
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
+DEBUG = os.environ.get('DEBUG')
 
 ALLOWED_HOSTS = ['*']
 
@@ -56,7 +56,7 @@ INSTALLED_APPS = [
     'django_celery_beat',
     'bootstrapform',
     'survey',
-    'storages',
+    # 'storages',
     # local
     "index",
     "demographics",
@@ -151,21 +151,21 @@ STATIC_URL = 'static/'
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+# AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+# AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+# AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
 
-AWS_S3_FILE_OVERWRITE = False
-AWS_DEFAULT_ACL = None
-STORAGES = {
-    "default": {
-        "BACKEND": os.environ.get('DEFAULT_FILE_STORAGE'),
-        "LOCATION": "static/",
-    },
-}
+# AWS_S3_FILE_OVERWRITE = False
+# AWS_DEFAULT_ACL = None
+# STORAGES = {
+#     "default": {
+#         "BACKEND": os.environ.get('DEFAULT_FILE_STORAGE'),
+#         "LOCATION": "static/",
+#     },
+# }
 
 # Set the default storage for static files
-STATICFILES_STORAGE = "storages.backends.s3.S3Storage"
+# STATICFILES_STORAGE = "storages.backends.s3.S3Storage"
 
 # CORS
 
