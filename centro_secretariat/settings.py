@@ -160,8 +160,12 @@ AWS_DEFAULT_ACL = None
 STORAGES = {
     "default": {
         "BACKEND": os.environ.get('DEFAULT_FILE_STORAGE'),
+        "LOCATION": "static/",
     },
 }
+
+# Set the default storage for static files
+STATICFILES_STORAGE = "storages.backends.s3.S3Storage"
 
 # CORS
 

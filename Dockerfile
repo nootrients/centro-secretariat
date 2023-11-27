@@ -24,6 +24,9 @@ COPY requirements.txt requirements.txt
 # Install Python dependencies
 RUN pip3 install -r requirements.txt
 
+# Run collectstatic during the build process
+RUN python manage.py collectstatic --noinput
+
 # Copy the current directory contents into the container at /app
 COPY . .
 
