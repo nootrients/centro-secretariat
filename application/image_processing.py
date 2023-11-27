@@ -89,7 +89,7 @@ def extract_id_info(national_id_content, national_id_name):
 
             image_to_text = pytesseract.image_to_string(no_noise, lang='eng')
             
-            # logging.debug(f"Text Extracted: {image_to_text}")
+            logging.debug(f"Text Extracted: {image_to_text}")
             
             # Initializing variable (list) to store extracted data from the ID
             extracted_info = {
@@ -587,7 +587,25 @@ def extract_applicant_voters(voter_certificate_content, voter_certificate_name):
                     'Oote Issued : ', 'Oote Issued ; ', 'Oote Issued . ', 
                     'Oote lssued : ', 'Oote lssued ; ', 'Oote lssued . ', 
                     'Oole Issued : ', 'Oole Issued ; ', 'Oole Issued . ', 
-                    'Oole lssued : ', 'Oole lssued ; ', 'Oole lssued . ', ]
+                    'Oole lssued : ', 'Oole lssued ; ', 'Oole lssued . ', 
+                    
+                    'Date Issued ', 'Date Issued ', 'Date Issued ', 
+                    'Dote Issued ', 'Dote Issued ', 'Dote Issued ', 
+                    'Date lssued ', 'Date lssued ', 'Date lssued ', 
+                    'Dote lssued ', 'Dote lssued ', 'Dote lssued ', 
+                    'Dale Issued ', 'Dale Issued ', 'Dale Issued ', 
+                    'Dale lssued ', 'Dale lssued ', 'Dale lssued ', 
+                    'Dole Issued ', 'Dole Issued ', 'Dole Issued ', 
+                    'Dole lssued ', 'Dole lssued ', 'Dole lssued ', 
+                    'Oate Issued ', 'Oate Issued ', 'Oate Issued ', 
+                    'Oate lssued ', 'Oate lssued ', 'Oate lssued ', 
+                    'Oale Issued ', 'Oale Issued ', 'Oale Issued ', 
+                    'Oale lssued ', 'Oale lssued ', 'Oale lssued ', 
+                    'Oote Issued ', 'Oote Issued ', 'Oote Issued ', 
+                    'Oote lssued ', 'Oote lssued ', 'Oote lssued ', 
+                    'Oole Issued ', 'Oole Issued ', 'Oole Issued ', 
+                    'Oole lssued ', 'Oole lssued ', 'Oole lssued ', 
+                ]
             
 
             # Appending Section
@@ -840,7 +858,25 @@ def extract_guardian_voters(guardians_voter_certificate_content, guardians_voter
                     'Oote Issued : ', 'Oote Issued ; ', 'Oote Issued . ', 
                     'Oote lssued : ', 'Oote lssued ; ', 'Oote lssued . ', 
                     'Oole Issued : ', 'Oole Issued ; ', 'Oole Issued . ', 
-                    'Oole lssued : ', 'Oole lssued ; ', 'Oole lssued . ', ]
+                    'Oole lssued : ', 'Oole lssued ; ', 'Oole lssued . ', 
+                    
+                    'Date Issued ', 'Date Issued ', 'Date Issued ', 
+                    'Dote Issued ', 'Dote Issued ', 'Dote Issued ', 
+                    'Date lssued ', 'Date lssued ', 'Date lssued ', 
+                    'Dote lssued ', 'Dote lssued ', 'Dote lssued ', 
+                    'Dale Issued ', 'Dale Issued ', 'Dale Issued ', 
+                    'Dale lssued ', 'Dale lssued ', 'Dale lssued ', 
+                    'Dole Issued ', 'Dole Issued ', 'Dole Issued ', 
+                    'Dole lssued ', 'Dole lssued ', 'Dole lssued ', 
+                    'Oate Issued ', 'Oate Issued ', 'Oate Issued ', 
+                    'Oate lssued ', 'Oate lssued ', 'Oate lssued ', 
+                    'Oale Issued ', 'Oale Issued ', 'Oale Issued ', 
+                    'Oale lssued ', 'Oale lssued ', 'Oale lssued ', 
+                    'Oote Issued ', 'Oote Issued ', 'Oote Issued ', 
+                    'Oote lssued ', 'Oote lssued ', 'Oote lssued ', 
+                    'Oole Issued ', 'Oole Issued ', 'Oole Issued ', 
+                    'Oole lssued ', 'Oole lssued ', 'Oole lssued ', 
+                ]
             
             # Appending Section
             # Iterate through the field patterns and their associated patterns
