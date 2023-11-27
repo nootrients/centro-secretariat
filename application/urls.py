@@ -19,6 +19,9 @@ urlpatterns = [
     path('list/', views.EligibleApplicationsListAPIView.as_view(), name='view-eligible-applications-list'),
     path('list/<str:application_reference_id>/', views.EligibleApplicationDetailAPIView.as_view(), name='view-eligible-applications-detail'),
 
-    path('config/<int:pk>/', views.EligibilityConfigView.as_view(), name='eligibility-config')
+    path('config/<int:pk>/', views.EligibilityConfigView.as_view(), name='eligibility-config'),
+
+    path('univ/', views.UnivList.as_view(), name='univ-list'),
+    path('courses/', views.CourseList.as_view(), name='course-list'),
 
 ]+static(settings.MEDIA_URL, document_route=settings.MEDIA_ROOT)

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from application.models import TempApplications, Applications, EligibilityConfig, StatusUpdate, PartneredUniversities
+from application.models import TempApplications, Applications, EligibilityConfig, StatusUpdate, PartneredUniversities, Courses
 
 from demographics.serializer import GenderSerializer
 from demographics.models import Gender
@@ -316,3 +316,15 @@ class ApplicationsRenewalSerializer(serializers.ModelSerializer):
             validated_data['guardians_voter_certificate'] = ContentFile(guardian_voters_binary_content, name='guardians_votersCert.jpg')
 
         return super(ApplicationsRenewalSerializer, self).update(instance, validated_data)
+    
+
+class UnivSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PartneredUniversities
+        fields = '__all__'
+
+        
+class CourseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Courses
+        fields = '__all__'

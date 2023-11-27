@@ -19,7 +19,7 @@ from datetime import datetime
 from rest_framework import permissions, status, generics, viewsets
 
 from .models import Applications, EligibilityConfig, TempApplications, PartneredUniversities, Courses, StatusUpdate
-from .serializer import TempApplicationsSerializer, TempApplicationsRetrievalSerializer, ApplicationsSerializer, EligibleApplicationsSerializer, EligibilityConfigSerializer, ApplicationRetrieveUpdateSerializer, StatusUpdateSerializer, ApplicationsRenewalSerializer
+from .serializer import TempApplicationsSerializer, TempApplicationsRetrievalSerializer, ApplicationsSerializer, EligibleApplicationsSerializer, EligibilityConfigSerializer, ApplicationRetrieveUpdateSerializer, StatusUpdateSerializer, ApplicationsRenewalSerializer, UnivSerializer, CourseSerializer
 from .image_processing import extract_id_info, extract_applicant_voters, extract_guardian_voters
 from .tasks import check_eligibility
 
@@ -810,3 +810,15 @@ class RenewingForm(RetrieveUpdateAPIView):
                         'errors': serializer.errors,
                     }
             return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
+        
+
+class UnivList(ListAPIView):
+    permission_classes = [permissions.AllowAny, ]
+    serializer_class = UnivSerializer
+    queryset = PartneredUniversities.objects.all()
+
+
+class CourseList(ListAPIView):
+    permission_classes = [permissions.AllowAny, ]
+    serializer_class = CourseSerializer
+    queryset = Courses.objects.all()
