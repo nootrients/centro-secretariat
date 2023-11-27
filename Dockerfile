@@ -16,7 +16,7 @@ RUN tesseract --version && \
     xelatex --version
 
 # Set the working directory in the container
-WORKDIR /app
+WORKDIR /centro_secretariat
 
 # Copy the Python dependencies file to the container at /app
 COPY requirements.txt requirements.txt
