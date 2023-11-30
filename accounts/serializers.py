@@ -5,33 +5,24 @@ from rest_framework import serializers
 
 from .models import CustomUser, Head, Officer, Scholar
 from .models import UserProfile, HeadProfile, OfficerProfile, ScholarProfile
+from .utils import generate_random_password
+
+from django.core.mail import send_mail, EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from django.utils import timezone
+
+from drf_writable_nested.serializers import WritableNestedModelSerializer
 
 
-
-class AccountSerializer(serializers.ModelSerializer):
+class DisplayAccountListSerializer(serializers.ModelSerializer):
     """Serializer for all the registered accounts in the system."""
 
     lookup_field = 'username'
-    password = serializers.CharField(write_only=True)
 
     class Meta:
         model = CustomUser
-        fields = ("id", "username", "email", "password", "role", "date_joined", "is_active", "is_superuser")
-    
-    def create(self, validated_data):
-        # Extract the password from validated_data and hash it
-        password = validated_data.get('password')
-        hashed_password = make_password(password)
-
-        print(f'Password: {password}')
-        print(f'Hashed Password: {hashed_password}')
-
-        # Create the user with the hashed password
-        user = CustomUser(**validated_data)
-        user.set_password(hashed_password)  # Set the hashed password
-        user.save()
-
-        return user
+        fields = ("username", "email", "is_active", "role")
 
 
 class AccountDetailSerializer(serializers.ModelSerializer):
@@ -89,53 +80,41 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
         fields = '__all__'
-        read_only_fields = ['user', 'district']
+        read_only_fields = (
+            'user',
+        )
 
-    age = serializers.SerializerMethodField()
-
-    def get_age(self, obj):
-        return obj.calculate_age()
-
-
-class HeadProfileSerializer(serializers.ModelSerializer):
-    """
-    Serializer for retrieving the personal information of a Head Officer.
-    """
-
-    user = serializers.CharField(read_only=True)
-    district = serializers.ChoiceField(read_only=True, choices=UserProfile.District)
+class CustomUserDetailSerializer(serializers.ModelSerializer):
+    profile = UserProfileSerializer()
 
     class Meta:
-        model = HeadProfile
-        fields = '__all__'
-        read_only_field = ("user", "district")
+        model = CustomUser
+        fields = (
+            'username',
+            'email',
+            'role',
+            'is_active',
+            'date_joined',
+            'profile'
+        )
+        read_only_fields = (
+            'username',
+            'role',
+            'date_joined',
+        )
 
-    age = serializers.SerializerMethodField()
-
-    def get_age(self, obj):
-        return obj.calculate_age()
-
-class OfficerProfileSerializer(serializers.ModelSerializer):
-    """
-    Serializer for retrieving the personal information of an Officer.
-    """
-
-    #user = serializers.CharField(read_only=True)
-    district = serializers.ChoiceField(read_only=True, choices=UserProfile.District)
-
-    class Meta:
-        model = OfficerProfile
-        fields = '__all__'
-        read_only_field = ("user", "district")
-
-    age = serializers.SerializerMethodField()
-
-    def get_age(self, obj):
-        return obj.calculate_age()
+    def update(self, instance, validated_data):
+        nested_serializer = self.fields['profile']
+        nested_instance = instance.profile
+        # note the data is `pop`ed
+        nested_data = validated_data.pop('profile')
+        nested_serializer.update(nested_instance, nested_data)
+        # this will not throw an exception,
+        # as `profile` is not part of `validated_data`
+        return super(CustomUserDetailSerializer, self).update(instance, validated_data)
 
 
 class ScholarProfileSerializer(serializers.ModelSerializer):
-    # Serializer for retrieving the personal information of an existing Scholar
 
     class Meta:
         model = ScholarProfile
@@ -182,3 +161,55 @@ class ChangePasswordSerializer(serializers.Serializer):
         if data['new_password'] != data['confirm_password']:
             raise serializers.ValidationError("New password and confirm password must match.")
         return data
+    
+
+class OfficerCreateSerializer(serializers.ModelSerializer):
+    profile = UserProfileSerializer()
+
+    class Meta:
+        model = Officer
+        fields = (
+            'email', 
+            'profile',
+        )
+        read_only_fields = (
+            'is_active',
+            'date_joined',
+        )
+        extra_kwargs = {"password": {'write_only': True}}
+        
+
+    def create(self, validated_data):
+        nested_serializer = self.fields['profile']
+        nested_data = validated_data.pop('profile')
+
+        validated_data['role'] = CustomUser.Role.OFFICER
+
+        generated_password = generate_random_password()
+        custom_user_instance = CustomUser.objects.create_user(**validated_data, password=generated_password)
+        generated_username = custom_user_instance.username
+
+        nested_data['user'] = custom_user_instance
+        nested_serializer.create(nested_data)
+
+        # Send email
+        subject_email = 'Your account details'
+        context = {
+            "username": generated_username,
+            "password": generated_password,
+        }
+
+        html_message = render_to_string("content/supply_officer_account.html", context=context)
+        plain_message = strip_tags(html_message)
+
+        message = EmailMultiAlternatives(
+            subject=subject_email,
+            body=plain_message,
+            from_email=None,
+            to=[validated_data['email'], ]
+        )
+
+        message.attach_alternative(html_message, "text/html")
+        message.send()
+
+        return custom_user_instance

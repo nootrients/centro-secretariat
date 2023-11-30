@@ -335,6 +335,8 @@ class EligibilityConfig(models.Model):
     voters_validity_year_start = models.PositiveSmallIntegerField(null=True, blank=False)
     voters_validity_year_end = models.PositiveSmallIntegerField(null=True, blank=False)
 
+    is_ongoing = models.BooleanField(null=True, blank=False)
+
 
 class TempApplications(models.Model):
     class Barangay(models.TextChoices):
