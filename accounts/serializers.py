@@ -114,11 +114,21 @@ class CustomUserDetailSerializer(serializers.ModelSerializer):
         return super(CustomUserDetailSerializer, self).update(instance, validated_data)
 
 
-class ScholarProfileSerializer(serializers.ModelSerializer):
+class ScholarDetailSerializer(serializers.ModelSerializer):
+    username = serializers.SerializerMethodField()
+    email = serializers.SerializerMethodField()
+    is_active = serializers.SerializerMethodField()
 
     class Meta:
         model = ScholarProfile
-        fields = '__all__'
+        fields = (
+            'username',
+            'email',
+            'years_of_residency',
+            'scholarship_type',
+            'is_graduating',
+            'is_active'
+        )
         read_only_fields = (
             "user", 
             "district",
@@ -127,14 +137,23 @@ class ScholarProfileSerializer(serializers.ModelSerializer):
             "is_graduating",
         )
 
-    age = serializers.SerializerMethodField()
+    def get_username(self, obj):
+        return obj.user.username
 
-    def get_age(self, obj):
-        return obj.calculate_age()
+    def get_email(self, obj):
+        return obj.user.email
+
+    def get_is_active(self, obj):
+        return obj.user.is_active
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        print(data)  # Add this line to print the serialized data for debugging
+        return data
 
 
 class RegisterUserSerializer(serializers.ModelSerializer):
-
+    
     class Meta:
         model = CustomUser
         fields = ("email", "password", "is_active")
