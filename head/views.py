@@ -1,5 +1,7 @@
 import csv
 import pandas as pd
+import io
+import base64
 import matplotlib.pyplot as plt
 
 from rest_framework.response import Response
@@ -9,6 +11,7 @@ from rest_framework.permissions import AllowAny
 
 from django.db.models import Count
 from django.http import HttpResponse
+from django.http import JsonResponse
 
 from accounts.permissions import IsHeadOfficer
 
@@ -18,7 +21,16 @@ from application.serializer import DashboardDataSerializer
 from .forecasting import forecast_scholarship_type
 from statsmodels.tsa.arima.model import ARIMA
 
-# Create your views here.
+
+def plot_to_base64(plt):
+        image_stream = io.BytesIO()
+        plt.savefig(image_stream, format='png')
+        image_stream.seek(0)
+        base64_image = base64.b64encode(image_stream.read()).decode('utf-8')
+        plt.close()
+
+        return base64_image
+
 class DashboardDataView(APIView):
     """
     Endpoint for serving the JSON response to populate charts in :8000/head/dashboard
@@ -191,7 +203,7 @@ class ForecastView(APIView):
     # Change to IsHeadOfficer later
     permission_classes = [AllowAny, ]
     parser_classes = [MultiPartParser]
-        
+    
     def post(self, request, *args, **kwargs):
         # Ensure 'file' and 'scholarship_type' are present in the request data
         if 'file' not in request.data:
@@ -207,18 +219,13 @@ class ForecastView(APIView):
         df = pd.read_csv(file_obj, parse_dates=['Date'])
         df = df.set_index('Date')
 
-        # Set the frequency
         df.index.freq = '6M'
-
-        # Call forecasting per scholarship_type
+        
         try:
-            # Extract and process the uploaded CSV file
             file_obj = request.data['file']
-            # result_data = forecast_scholarship_type(df, scholarship_type)
 
             best_order_new, best_order_renewing, test = forecast_scholarship_type(df, scholarship_type)
 
-            # Fit the final ARIMA models with the best orders
             final_model_new = ARIMA(df[f'{scholarship_type}_New'], order=best_order_new)
             final_model_fit_new = final_model_new.fit()
 
@@ -235,13 +242,34 @@ class ForecastView(APIView):
 
             forecast_new_dict = forecast_new.reset_index().to_dict(orient='records')
             forecast_renewing_dict = forecast_renewing.reset_index().to_dict(orient='records')
+            
+            plt.figure(figsize=(12, 6))
+            plt.plot(df.index, df[f'{scholarship_type}_New'], label='Actual (New)', marker='o')
+            plt.plot(forecast_new.index, forecast_new, label='Forecast (New)', linestyle='--', marker='o')
+            plt.title(f'Actual vs Forecasted Values for {scholarship_type} (New Applicants) - ARIMA Order: {best_order_new}')
+            plt.xlabel('Date')
+            plt.ylabel('Number of Applicants')
+            plt.legend()
+            forecast_new_plot = plot_to_base64(plt)
+
+            # Plot entire dataset along with forecasted values for renewing applicants
+            plt.figure(figsize=(12, 6))
+            plt.plot(df.index, df[f'{scholarship_type}_Renewing'], label='Actual (Renewing)', marker='o')
+            plt.plot(forecast_renewing.index, forecast_renewing, label='Forecast (Renewing)', linestyle='--', marker='o')
+            plt.title(f'Actual vs Forecasted Values for {scholarship_type} (Renewing Applicants) - ARIMA Order: {best_order_renewing}')
+            plt.xlabel('Date')
+            plt.ylabel('Number of Applicants')
+            plt.legend()
+            forecast_renewing_plot = plot_to_base64(plt)
 
             response_data = {
                 'status': 'Ok',
-                'forecast_new': forecast_new_dict,
-                'forecast_renewing': forecast_renewing_dict,
+                # 'forecast_new': forecast_new_dict,
+                # 'forecast_renewing': forecast_renewing_dict,
+                'forecast_new_plot': forecast_new_plot,
+                'forecast_renewing_plot': forecast_renewing_plot,
             }
 
-            return Response(response_data)
+            return JsonResponse(response_data)
         except Exception as e:
             return Response({'error': str(e)}, status=500)
