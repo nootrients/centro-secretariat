@@ -15,7 +15,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 
 # Only on local development
 # Dockerfile will handle this on deployment
-pytesseract.pytesseract.tesseract_cmd = "C:/Program Files/Tesseract-OCR/tesseract.exe"
+# pytesseract.pytesseract.tesseract_cmd = "C:/Program Files/Tesseract-OCR/tesseract.exe"
 
 logging.basicConfig(level=logging.DEBUG)
 
