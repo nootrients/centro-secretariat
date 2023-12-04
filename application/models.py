@@ -4,7 +4,7 @@ from django.utils import timezone
 from accounts.models import Officer, Scholar
 from demographics.models import Gender
 
-from datetime import date
+from datetime import date, datetime
 
 # Create your models here.
 class AcademicYearField(models.CharField):
@@ -34,6 +34,10 @@ class Courses(models.Model):
 
     def __str__(self):
         return self.course_name
+    
+
+class TempApplicationIdCounter(models.Model):
+    counter = models.PositiveIntegerField(default=1)
 
 
 class Applications(models.Model):
@@ -576,7 +580,43 @@ class TempApplications(models.Model):
         }
 
         self.district = district_mapping.get(self.barangay, self.district)
+
+        if not self.application_reference_id:
+            # Generate the application_reference_id if not already set
+            self.application_reference_id = self.generate_application_reference_id()
+
         super().save(*args, **kwargs)
+
+    def generate_application_reference_id(self):
+        print(f"Debug: self.scholarship_type = {self.scholarship_type}")
+        print(f"Debug: self.pk = {self.pk}")
+        
+        # Map scholarship type strings to numerical values
+        scholarship_type_mapping = {
+            "BASIC PLUS SUC": "0",
+            "SUC_LCU": "1",
+            "BASIC SCHOLARSHIP": "2",
+            "HONORS": "3",
+            "PRIORITY": "4",
+            "PREMIER": "5",
+        }
+
+        # Get the numeric value of the scholarship type with a default of "UNKNOWN"
+        scholarship_type_numeric = scholarship_type_mapping.get(self.scholarship_type, "UNKNOWN")
+
+        if scholarship_type_numeric is None:
+            print(f"Warning: Unknown scholarship type encountered - {self.scholarship_type}")
+
+        # Increment the counter and create the new application_reference_id
+        counter = TempApplicationIdCounter.objects.first()
+        if counter is None:
+            counter = TempApplicationIdCounter.objects.create()
+
+        counter.counter += 1
+        counter.save(update_fields=['counter'])
+
+        # Create the new application_reference_id
+        return f"{datetime.now().year:04d}-{counter.counter:05d}-ST-{scholarship_type_numeric}"
 
     def delete(self, *args, **kwargs):
         # Delete associated files
@@ -602,3 +642,15 @@ class StatusUpdate(models.Model):
     description = models.CharField(max_length=150, null=True, blank=False)
     current_step = models.PositiveSmallIntegerField(null=True, blank=False, default=1)
     is_active = models.BooleanField(default=False, blank=False)
+
+
+class AuditLog(models.Model):
+    ACTION_CHOICES = [
+        ('ACCEPTED', 'ACCEPTED'),
+        ('REJECTED', 'REJECTED'),
+    ]
+
+    application_id = models.ForeignKey(Applications, on_delete=models.CASCADE)
+    officer = models.ForeignKey(Officer, on_delete=models.CASCADE)
+    action_type = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    timestamp = models.DateTimeField(auto_now_add=True)

@@ -1,9 +1,13 @@
 import django_filters, base64, uuid
+import calendar, django_filters, csv
+
+from django.utils.translation import gettext as _
 
 from django.db.models import Q
 from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse
 from django.db import IntegrityError
+from django.http import HttpResponse
 
 from rest_framework.generics import CreateAPIView, ListAPIView, RetrieveAPIView, RetrieveUpdateAPIView
 from rest_framework.views import APIView
@@ -11,6 +15,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.validators import ValidationError
+from rest_framework.filters import SearchFilter
 
 from django_filters.rest_framework import DjangoFilterBackend
 from django.core.files.base import ContentFile
@@ -18,11 +23,12 @@ from datetime import datetime
 
 from rest_framework import permissions, status, generics, viewsets
 
-from .models import Applications, EligibilityConfig, TempApplications, PartneredUniversities, Courses, StatusUpdate
-from .serializer import TempApplicationsSerializer, TempApplicationsRetrievalSerializer, ApplicationsSerializer, EligibleApplicationsSerializer, EligibilityConfigSerializer, ApplicationRetrieveUpdateSerializer, StatusUpdateSerializer, ApplicationsRenewalSerializer, UnivSerializer, CourseSerializer
+from .models import Applications, EligibilityConfig, TempApplications, PartneredUniversities, Courses, StatusUpdate, AuditLog
+from .serializer import TempApplicationsSerializer, TempApplicationsRetrievalSerializer, ApplicationsSerializer, EligibleApplicationsSerializer, EligibilityConfigSerializer, ApplicationRetrieveUpdateSerializer, StatusUpdateSerializer, ApplicationsRenewalSerializer, UnivSerializer, CourseSerializer, AllApplicationsSerializer, AuditTrailSerializer
 from .image_processing import extract_id_info, extract_applicant_voters, extract_guardian_voters
 from .tasks import check_eligibility
 
+from accounts.models import Officer
 from accounts.tasks import supply_account, update_scholar_profile
 from accounts.permissions import IsOfficer, IsHeadOfficer, IsLinkedApplicationUser
 from demographics.models import Gender
@@ -69,7 +75,7 @@ class ApplicationForm(CreateAPIView):
             data = request.data
 
             temp_data = {
-                'application_reference_id': data['application_reference_id'],
+                # 'application_reference_id': data['application_reference_id'],
 
                 # Personal Information Section
                 'national_id_name': data['national_id'].name,
@@ -450,11 +456,14 @@ class ReviewAndProcessView(APIView):
 
 
 class EligibleApplicationsFilter(django_filters.FilterSet):
+    application_reference_id = django_filters.CharFilter(lookup_expr='icontains', field_name='application_reference_id')
+
     class Meta:
         model = Applications
         fields = {
-            'applicant_status': ['exact'],
             'scholarship_type': ['exact'],
+            'applicant_status': ['exact'],
+            'barangay': ['exact'],
         }
 
 
@@ -463,15 +472,48 @@ class EligibleApplicationsListAPIView(ListAPIView):
     Endpoint for LISTING all the `ELIGIBLE` scholarship applications.
     """
     # OLD CODE
-    permission_classes = [permissions.IsAdminUser | IsOfficer]
+    permission_classes = [IsOfficer, ]
 
     queryset = Applications.objects.filter(is_eligible=True, application_status="PENDING", evaluated_by=None)
     serializer_class = EligibleApplicationsSerializer
 
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [
+        DjangoFilterBackend,
+        SearchFilter,
+    ]
     filterset_class = EligibleApplicationsFilter
 
     # template = 'rest_framework/filters/base.html'
+
+
+class AllApplicationsFilter(django_filters.FilterSet):
+    application_reference_id = django_filters.CharFilter(lookup_expr='icontains', field_name='application_reference_id')
+
+    class Meta:
+        model = Applications
+        fields = {
+            'barangay': ['exact'],
+            'scholarship_type': ['exact'],
+            'applicant_status': ['exact'],
+            'application_status': ['exact'],
+        }
+
+
+class AllApplicationsListAPIView(ListAPIView):
+    """
+    Endpoint for LISTING all the `ELIGIBLE` scholarship applications.
+    """
+    # OLD CODE
+    permission_classes = [IsHeadOfficer, ]
+
+    queryset = Applications.objects.filter(is_eligible=True)
+    serializer_class = AllApplicationsSerializer
+
+    filter_backends = [
+        DjangoFilterBackend,
+        SearchFilter,
+    ]
+    filterset_class = AllApplicationsFilter
 
 
 class EligibleApplicationDetailAPIView(RetrieveUpdateAPIView):
@@ -479,7 +521,7 @@ class EligibleApplicationDetailAPIView(RetrieveUpdateAPIView):
     Endpoint for retrieving the application instance's details, and for approving an application.
     """
 
-    permission_classes = [permissions.IsAdminUser | IsOfficer]
+    permission_classes = [IsHeadOfficer | IsOfficer]
     queryset = Applications.objects.all()
     serializer_class = ApplicationRetrieveUpdateSerializer
     lookup_field = 'application_reference_id'
@@ -822,3 +864,63 @@ class CourseList(ListAPIView):
     permission_classes = [permissions.AllowAny, ]
     serializer_class = CourseSerializer
     queryset = Courses.objects.all()
+
+
+class MonthFilter(django_filters.ChoiceFilter):
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault('choices', [(i, _(calendar.month_name[i])) for i in range(1, 13)])
+        super().__init__(*args, **kwargs)
+
+
+class YearFilter(django_filters.ChoiceFilter):
+    def __init__(self, *args, **kwargs):
+        start_year = 2008
+        current_year = datetime.now().year
+        kwargs.setdefault('choices', [(i, str(i)) for i in range(start_year, current_year + 1)])  # Adjust the range as needed
+        super().__init__(*args, **kwargs)
+
+
+class AuditTrailFilter(django_filters.FilterSet):
+
+    class Meta:
+        model = AuditLog
+        fields = {
+            'timestamp': ['month', 'year'],
+            'officer__username': ['exact'],
+            'action_type': ['exact'],
+        }
+
+    timestamp__month = MonthFilter(
+        field_name='timestamp',
+        lookup_expr='month',
+        label=_('Month'),
+    )
+
+    timestamp__year = YearFilter(
+        field_name='timestamp',
+        lookup_expr='year',
+        label=_('Year'),
+    )
+
+    officer__username = django_filters.ModelChoiceFilter(
+        field_name='officer__username',
+        to_field_name='username',
+        queryset=Officer.objects.all(),
+        label=_('Officer Username'),
+    )
+
+
+class AuditTrail(ListAPIView):
+    """
+    Endpoint for LISTING ALL the audits under scholarship applications.
+    """
+
+    permission_classes = [IsHeadOfficer, ]
+    serializer_class = AuditTrailSerializer
+    queryset = AuditLog.objects.all()
+
+    filter_backends = [
+        DjangoFilterBackend
+    ]
+
+    filterset_class = AuditTrailFilter

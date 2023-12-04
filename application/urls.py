@@ -18,8 +18,14 @@ urlpatterns = [
     # GET (only those who passed the Automated Eligibility Checking)
     path('list/', views.EligibleApplicationsListAPIView.as_view(), name='view-eligible-applications-list'),
     path('list/<str:application_reference_id>/', views.EligibleApplicationDetailAPIView.as_view(), name='view-eligible-applications-detail'),
+    
+    # For Head Officer
+    path('all/', views.AllApplicationsListAPIView.as_view(), name='view-all-eligible-applications'),
+    path('all/<str:application_reference_id>/', views.EligibleApplicationDetailAPIView.as_view(), name='view-all-eligible-application-detail'),
 
     path('config/<int:pk>/', views.EligibilityConfigView.as_view(), name='eligibility-config'),
+
+    path('logs/', views.AuditTrail.as_view(), name='audit-trail'),
 
     path('univ/', views.UnivList.as_view(), name='univ-list'),
     path('courses/', views.CourseList.as_view(), name='course-list'),

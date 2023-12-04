@@ -26,7 +26,7 @@ def debug_task(self):
 # Schedule the task to run every day at a specific time
 app.conf.beat_schedule = {
     'clean-expired-instances': {
-        'task': 'your_app.tasks.clean_expired_instances',
+        'task': 'application.tasks.clean_expired_instances',
         'schedule': crontab(hour=18, minute=0),  # Adjust the time as needed, for context, it's set to run at 6pm
     },
 }

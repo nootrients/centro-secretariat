@@ -1,6 +1,8 @@
 from rest_framework import serializers
 
-from application.models import TempApplications, Applications, EligibilityConfig, StatusUpdate, PartneredUniversities, Courses
+from application.models import TempApplications, Applications, EligibilityConfig, StatusUpdate, PartneredUniversities, Courses, AuditLog
+
+from accounts.models import Officer
 
 from demographics.serializer import GenderSerializer
 from demographics.models import Gender
@@ -140,6 +142,21 @@ class EligibleApplicationsSerializer(serializers.ModelSerializer):
             'semester',
             'applicant_status',
             'scholarship_type',
+        )
+
+
+class AllApplicationsSerializer(serializers.ModelSerializer):
+    """Serializer for retrieving `ELIGIBLE` scholarship applications."""
+
+    class Meta:
+        model = Applications
+        fields = (
+            'application_reference_id',
+            'email_address',
+            'barangay',
+            'scholarship_type',
+            'applicant_status',
+            'application_status',
         )
 
 
@@ -328,3 +345,22 @@ class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Courses
         fields = '__all__'
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Officer
+        fields = ['id', 'username']
+
+
+class AuditTrailSerializer(serializers.ModelSerializer):
+    """
+    Serializer for LISTING ALL the audits under scholarship applications.
+    """
+    
+    application_reference_id = serializers.CharField(source='application_id.application_reference_id', read_only=True)
+    officer_username = serializers.CharField(source='officer.username', read_only=True)
+
+    class Meta:
+        model = AuditLog
+        fields = ('application_reference_id', 'officer_username', 'action_type', 'timestamp')
