@@ -1,7 +1,11 @@
 import csv
+import pandas as pd
+import matplotlib.pyplot as plt
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.parsers import FileUploadParser, MultiPartParser
+from rest_framework.permissions import AllowAny
 
 from django.db.models import Count
 from django.http import HttpResponse
@@ -11,6 +15,8 @@ from accounts.permissions import IsHeadOfficer
 from application.models import Applications
 from application.serializer import DashboardDataSerializer
 
+from .forecasting import forecast_scholarship_type
+from statsmodels.tsa.arima.model import ARIMA
 
 # Create your views here.
 class DashboardDataView(APIView):
@@ -178,3 +184,64 @@ class DashboardDataDownloadView(APIView):
         ])
 
         return response
+    
+
+class ForecastView(APIView):
+    
+    # Change to IsHeadOfficer later
+    permission_classes = [AllowAny, ]
+    parser_classes = [MultiPartParser]
+        
+    def post(self, request, *args, **kwargs):
+        # Ensure 'file' and 'scholarship_type' are present in the request data
+        if 'file' not in request.data:
+            return Response({"error": "File not provided"}, status=400)
+
+        scholarship_type = request.data.get('scholarship_type')
+
+        if not scholarship_type:
+            return Response({"error": "scholarship_type is required"}, status=400)
+
+        # Loading data
+        file_obj = request.data['file']
+        df = pd.read_csv(file_obj, parse_dates=['Date'])
+        df = df.set_index('Date')
+
+        # Set the frequency
+        df.index.freq = '6M'
+
+        # Call forecasting per scholarship_type
+        try:
+            # Extract and process the uploaded CSV file
+            file_obj = request.data['file']
+            # result_data = forecast_scholarship_type(df, scholarship_type)
+
+            best_order_new, best_order_renewing, test = forecast_scholarship_type(df, scholarship_type)
+
+            # Fit the final ARIMA models with the best orders
+            final_model_new = ARIMA(df[f'{scholarship_type}_New'], order=best_order_new)
+            final_model_fit_new = final_model_new.fit()
+
+            final_model_renewing = ARIMA(df[f'{scholarship_type}_Renewing'], order=best_order_renewing)
+            final_model_fit_renewing = final_model_renewing.fit()
+
+            # Make predictions and forecast
+            start = len(df)
+            end = len(df) + len(test) - 1
+            forecast_periods = len(test)
+
+            forecast_new = final_model_fit_new.get_forecast(steps=forecast_periods).predicted_mean
+            forecast_renewing = final_model_fit_renewing.get_forecast(steps=forecast_periods).predicted_mean
+
+            forecast_new_dict = forecast_new.reset_index().to_dict(orient='records')
+            forecast_renewing_dict = forecast_renewing.reset_index().to_dict(orient='records')
+
+            response_data = {
+                'status': 'Ok',
+                'forecast_new': forecast_new_dict,
+                'forecast_renewing': forecast_renewing_dict,
+            }
+
+            return Response(response_data)
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
