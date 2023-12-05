@@ -22,7 +22,7 @@ class DisplayAccountListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ("username", "email", "is_active", "role")
+        fields = ("id", "username", "email", "is_active", "role")
 
 
 class AccountDetailSerializer(serializers.ModelSerializer):
@@ -122,6 +122,7 @@ class ScholarDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = ScholarProfile
         fields = (
+            'id',
             'username',
             'email',
             'years_of_residency',

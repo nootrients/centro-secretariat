@@ -134,6 +134,7 @@ class EligibleApplicationsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Applications
         fields = (
+            'id',
             'application_reference_id',
             'lastname',
             'firstname',
@@ -151,6 +152,7 @@ class AllApplicationsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Applications
         fields = (
+            'id',
             'application_reference_id',
             'email_address',
             'barangay',

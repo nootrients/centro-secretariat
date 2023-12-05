@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.parsers import FileUploadParser, MultiPartParser
 from rest_framework.permissions import AllowAny
+from rest_framework import generics
 
 from django.db.models import Count
 from django.http import HttpResponse
@@ -19,6 +20,9 @@ from application.models import Applications
 from application.serializer import DashboardDataSerializer
 
 from .forecasting import forecast_scholarship_type
+from .models import YearlyScholarshipData
+from .serializer import YearlyScholarshipDataSerializer, YearlyScholarshipPerformanceSerializer
+
 from statsmodels.tsa.arima.model import ARIMA
 
 
@@ -198,10 +202,71 @@ class DashboardDataDownloadView(APIView):
         return response
     
 
+class ApplicantStatusData(APIView):
+    """
+    Endpoint for getting the counts of NEW and RENEWING Applicants.
+    """
+
+    permission_classes = [IsHeadOfficer, ]
+    serializer_class = DashboardDataSerializer
+
+    def get(self, request, *args, **kwargs):
+        new_applicants_count = Applications.objects.filter(applicant_status=Applications.ApplicantStatus.NEW_APPLICANT, application_status="ACCEPTED").count()
+        renewing_applicants_count = Applications.objects.filter(applicant_status=Applications.ApplicantStatus.RENEWING_APPLICANT, application_status="ACCEPTED").count()
+
+        data = {
+            'new_applicants_count': new_applicants_count,
+            'renewing_applicants_count': renewing_applicants_count,
+        }
+
+        return Response(data)
+
+
+class ApplicationStatusData(APIView):
+    """
+    Endpoint for getting the counts of ACCEPTED, REJECTED, and PENDING Applications.
+    """
+
+    permission_classes = [IsHeadOfficer, ]
+    serializer_class = DashboardDataSerializer
+
+    def get(self, request, *args, **kwargs):
+        accepted_count = Applications.objects.filter(application_status="ACCEPTED").count()
+        rejected_count = Applications.objects.filter(application_status="REJECTED").count()
+        pending_count = Applications.objects.filter(application_status="PENDING").count()
+
+        data = {
+            'accepted_count': accepted_count,
+            'rejected_count': rejected_count,
+            'pending_count': pending_count,
+        }
+
+        return Response(data)
+
+
+class CountPerScholarshipType(APIView):
+    """
+    Endpoint for getting the accepted applications per Scholarship Type
+    """
+
+    permission_classes = [IsHeadOfficer, ]
+    serializer_class = DashboardDataSerializer
+
+    def get(self, request, *args, **kwargs):
+        scholarship_type_count = (
+            Applications.objects
+            .filter(application_status = "ACCEPTED")
+            .values('scholarship_type')
+            .annotate(count=Count('scholarship_type'))
+        )
+
+        return Response(scholarship_type_count)
+
+
 class ForecastView(APIView):
     
     # Change to IsHeadOfficer later
-    permission_classes = [AllowAny, ]
+    permission_classes = [IsHeadOfficer, ]
     parser_classes = [MultiPartParser]
     
     def post(self, request, *args, **kwargs):
@@ -273,3 +338,15 @@ class ForecastView(APIView):
             return JsonResponse(response_data)
         except Exception as e:
             return Response({'error': str(e)}, status=500)
+        
+
+class DisplayYearlyPerformance(generics.ListAPIView):
+    """
+    Endpoint for saving the data gathered from the current year and semester to the yearly model.
+    """
+
+    permission_classes = [IsHeadOfficer, ]
+    serializer_class = YearlyScholarshipPerformanceSerializer
+    
+    def get_queryset(self):
+        return YearlyScholarshipData.objects.all()
