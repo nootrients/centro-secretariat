@@ -3,6 +3,7 @@ import pandas as pd
 import io
 import base64
 import matplotlib.pyplot as plt
+import datetime
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -16,7 +17,7 @@ from django.http import JsonResponse
 
 from accounts.permissions import IsHeadOfficer
 
-from application.models import Applications
+from application.models import Applications, EligibilityConfig
 from application.serializer import DashboardDataSerializer
 
 from .forecasting import forecast_scholarship_type
@@ -266,7 +267,8 @@ class CountPerScholarshipType(APIView):
 class ForecastView(APIView):
     
     # Change to IsHeadOfficer later
-    permission_classes = [IsHeadOfficer, ]
+    # permission_classes = [IsHeadOfficer, ]
+    permission_classes = [AllowAny, ]
     parser_classes = [MultiPartParser]
     
     def post(self, request, *args, **kwargs):
@@ -350,3 +352,185 @@ class DisplayYearlyPerformance(generics.ListAPIView):
     
     def get_queryset(self):
         return YearlyScholarshipData.objects.all()
+    
+
+class SaveYearlyPerformance(APIView):
+    """
+    Appending the current data (count) to the YearlyScholarshipData model
+    """
+
+    permission_classes = [IsHeadOfficer, ]
+
+    def post(self, request, *args, **kwargs):
+        eligibility_constraint_instance = EligibilityConfig.objects.first()
+        
+        year = datetime.date.today().year
+        semester = eligibility_constraint_instance.semester
+        
+        total_applications = Applications.objects.filter(is_eligible=True).count()
+        total_accepted = Applications.objects.filter(application_status="ACCEPTED").count()
+        total_rejected = Applications.objects.filter(application_status="REJECTED").count()
+        total_new = Applications.objects.filter(applicant_status=Applications.ApplicantStatus.NEW_APPLICANT, application_status="ACCEPTED").count()
+        total_renewing = Applications.objects.filter(applicant_status=Applications.ApplicantStatus.RENEWING_APPLICANT, application_status="ACCEPTED").count()
+        total_graduates = Applications.objects.filter(is_graduating=True, application_status="ACCEPTED").count()
+
+        total_basic_plus = Applications.objects.filter(scholarship_type=Applications.ScholarshipType.BASIC_PLUS_SUC, application_status="ACCEPTED").count()
+        total_basic_plus_new = Applications.objects.filter(scholarship_type=Applications.ScholarshipType.BASIC_PLUS_SUC, applicant_status=Applications.ApplicantStatus.NEW_APPLICANT, application_status="ACCEPTED").count()
+        total_basic_plus_renewing = Applications.objects.filter(scholarship_type=Applications.ScholarshipType.BASIC_PLUS_SUC, applicant_status=Applications.ApplicantStatus.RENEWING_APPLICANT, application_status="ACCEPTED").count()
+
+        total_basic_scholarship = Applications.objects.filter(scholarship_type=Applications.ScholarshipType.BASIC_SCHOLARSHIP, application_status="ACCEPTED").count()
+        total_basic_scholarship_new = Applications.objects.filter(scholarship_type=Applications.ScholarshipType.BASIC_SCHOLARSHIP, applicant_status=Applications.ApplicantStatus.NEW_APPLICANT, application_status="ACCEPTED").count()
+        total_basic_scholarship_renewing = Applications.objects.filter(scholarship_type=Applications.ScholarshipType.BASIC_SCHOLARSHIP, applicant_status=Applications.ApplicantStatus.RENEWING_APPLICANT, application_status="ACCEPTED").count()
+
+        total_suc_lcu = Applications.objects.filter(scholarship_type=Applications.ScholarshipType.SUC_LCU, application_status="ACCEPTED").count()
+        total_suc_lcu_new = Applications.objects.filter(scholarship_type=Applications.ScholarshipType.SUC_LCU, applicant_status=Applications.ApplicantStatus.NEW_APPLICANT, application_status="ACCEPTED").count()
+        total_suc_lcu_renewing = Applications.objects.filter(scholarship_type=Applications.ScholarshipType.SUC_LCU, applicant_status=Applications.ApplicantStatus.RENEWING_APPLICANT, application_status="ACCEPTED").count()
+
+        total_honors = Applications.objects.filter(scholarship_type=Applications.ScholarshipType.HONORS, application_status="ACCEPTED").count()
+        total_honors_new = Applications.objects.filter(scholarship_type=Applications.ScholarshipType.HONORS, applicant_status=Applications.ApplicantStatus.NEW_APPLICANT, application_status="ACCEPTED").count()
+        total_honors_renewing = Applications.objects.filter(scholarship_type=Applications.ScholarshipType.HONORS, applicant_status=Applications.ApplicantStatus.RENEWING_APPLICANT, application_status="ACCEPTED").count()
+
+        total_premier = Applications.objects.filter(scholarship_type=Applications.ScholarshipType.PREMIER, application_status="ACCEPTED").count()
+        total_premier_new = Applications.objects.filter(scholarship_type=Applications.ScholarshipType.PREMIER, applicant_status=Applications.ApplicantStatus.NEW_APPLICANT, application_status="ACCEPTED").count()
+        total_premier_renewing = Applications.objects.filter(scholarship_type=Applications.ScholarshipType.PREMIER, applicant_status=Applications.ApplicantStatus.RENEWING_APPLICANT, application_status="ACCEPTED").count()
+
+        total_priority = Applications.objects.filter(scholarship_type=Applications.ScholarshipType.PRIORITY, application_status="ACCEPTED").count()
+        total_priority_new = Applications.objects.filter(scholarship_type=Applications.ScholarshipType.PRIORITY, applicant_status=Applications.ApplicantStatus.NEW_APPLICANT, application_status="ACCEPTED").count()
+        total_priority_renewing = Applications.objects.filter(scholarship_type=Applications.ScholarshipType.PRIORITY, applicant_status=Applications.ApplicantStatus.RENEWING_APPLICANT, application_status="ACCEPTED").count()
+
+        data = {
+            'year': year,
+            'semester': semester,
+            
+            'total_applications': total_applications,
+            'total_accepted': total_accepted,
+            'total_rejected': total_rejected,
+            'total_new': total_new,
+            'total_renewing': total_renewing,
+            'total_graduates': total_graduates,
+
+            'total_basic_plus': total_basic_plus,
+            'total_basic_plus_new': total_basic_plus_new,
+            'total_basic_plus_renewing': total_basic_plus_renewing,
+
+            'total_basic_scholarship': total_basic_scholarship,
+            'total_basic_scholarship_new': total_basic_scholarship_new,
+            'total_basic_scholarship_renewing': total_basic_scholarship_renewing,
+
+            'total_suc_lcu': total_suc_lcu,
+            'total_suc_lcu_new': total_suc_lcu_new,
+            'total_suc_lcu_renewing': total_suc_lcu_renewing,
+
+            'total_honors': total_honors,
+            'total_honors_new': total_honors_new,
+            'total_honors_renewing': total_honors_renewing,
+            
+            'total_premier': total_premier,
+            'total_premier_new': total_premier_new,
+            'total_premier_renewing': total_premier_renewing,
+
+            'total_priority': total_priority,
+            'total_priority_new': total_priority_new,
+            'total_priority_renewing': total_priority_renewing,
+        }
+
+        serializer = YearlyScholarshipDataSerializer(data=data)
+
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response({"status": "Data saved successfully"})
+        else:
+            return Response(serializer.errors, status=400)
+        
+
+class GenerateYearlyScholarshipDataCSV(APIView):
+    """
+    Endpoint for generating a CSV file containing the yearly scholarship data
+    """
+
+    # permission_classes = [IsHeadOfficer, ]
+    permission_classes = [AllowAny, ]
+
+    def get(self, request, *args, **kwargs):
+        data_objects = YearlyScholarshipData.objects.all()
+
+        # Configure response
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="yearly_scholarship_data.csv"'
+
+        # Set CSV writer
+        writer = csv.writer(response)
+        writer.writerow([
+            'Date',
+            
+            'Total_Applications',
+            'Total_New',
+            'Total_Renewing',
+            
+            'GRADUATE',
+            
+            'Total_HONORS',
+            'HONORS_New',
+            'HONORS_Renewing',
+            
+            'Total_PREMIER',
+            'PREMIER_New',
+            'PREMIER_Renewing',
+            
+            'Total_PRIORITY',
+            'PRIORITY_New',
+            'PRIORITY_Renewing',
+            
+            'Total_BASIC PLUS SUC',
+            'BASIC PLUS SUC_New',
+            'BASIC PLUS SUC_Renewing',
+            
+            'Total_BASIC SCHOLARSHIP',
+            'BASIC SCHOLARSHIP_New',
+            'BASIC SCHOLARSHIP_Renewing',
+            
+            'Total_SUC_LCU',
+            'SUC_LCU_New',
+            'SUC_LCU_Renewing',
+        ])
+
+        for data in data_objects:
+            # Generate the value for the "Year" field based on semester
+            year_value = f"31 01 {data.year}" if data.semester == "FIRST SEMESTER" else f"31 07 {data.year}"
+
+            writer.writerow([
+                year_value,
+                
+                data.total_applications,
+                data.total_new,
+                data.total_renewing,
+
+                data.total_graduates,
+
+                data.total_honors,
+                data.total_honors_new,
+                data.total_honors_renewing,
+
+                data.total_premier,
+                data.total_premier_new,
+                data.total_premier_renewing,
+
+                data.total_priority,
+                data.total_priority_new,
+                data.total_priority_renewing,
+
+                data.total_basic_plus,
+                data.total_basic_plus_new,
+                data.total_basic_plus_renewing,
+
+                data.total_basic_scholarship,
+                data.total_basic_scholarship_new,
+                data.total_basic_scholarship_renewing,
+
+                data.total_suc_lcu,
+                data.total_suc_lcu_new,
+                data.total_suc_lcu_renewing,
+            ])
+
+        return response
