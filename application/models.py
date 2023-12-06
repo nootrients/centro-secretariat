@@ -137,6 +137,7 @@ class Applications(models.Model):
 
 
     class Status(models.TextChoices):
+        UNPROCESSED = "UNPROCESSED", "UNPROCESSED"
         PENDING = "PENDING", "PENDING"
         ACCEPTED = "ACCEPTED", "ACCEPTED"
         REJECTED = "REJECTED", "REJECTED"

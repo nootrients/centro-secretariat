@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.parsers import FileUploadParser, MultiPartParser
 from rest_framework.permissions import AllowAny
-from rest_framework import generics
+from rest_framework import generics, status
 
 from django.db.models import Count
 from django.http import HttpResponse
@@ -534,3 +534,74 @@ class GenerateYearlyScholarshipDataCSV(APIView):
             ])
 
         return response
+    
+
+class TopFiveUniversities(APIView):
+    """
+    Endpoint for getting the top 5 university/institutions that has the most number of accepted applicants
+    """
+
+    permission_classes = [IsHeadOfficer, ]
+
+    def get(self, request, *args, **kwargs):
+        try:
+            # Get the top 5 universities for each scholarship type
+            top_universities_data = {}
+            scholarship_types = ['HONORS', 'PREMIER', 'PRIORITY', 'BASIC PLUS SUC', 'BASIC SCHOLARSHIP', 'SUC_LCU']
+
+            for scholarship_type in scholarship_types:
+                top_universities_data[scholarship_type] = (
+                    Applications.objects
+                    .filter(application_status='ACCEPTED', scholarship_type=scholarship_type)
+                    .values('university_attending__university_name')
+                    .annotate(total_accepted=Count('id'))
+                    .order_by('-total_accepted')
+                    .values('university_attending__university_name', 'total_accepted')
+                    [:5]
+                )
+
+            # Format data for response
+            response_data = []
+            for scholarship_type, universities in top_universities_data.items():
+                response_data.append({
+                    'id': scholarship_type,
+                    'data': [
+                        {'x': university['university_attending__university_name'], 'y': university['total_accepted']}
+                        for university in universities
+                    ]
+                })
+
+            return Response(response_data)
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
+        
+
+class AcceptedApplicantsPerBarangay(APIView):
+    """
+    Endpoint for getting the counts of ACCEPTED applicants per BARANGAY.
+    """
+
+    permission_classes = [IsHeadOfficer, ]
+
+    def get(self, request, *args, **kwargs):
+        scholars_per_barangay_count = (
+            Applications.objects
+            .values('barangay', 'scholarship_type')
+            .annotate(count=Count('id'))
+        )
+
+        return Response(scholars_per_barangay_count)
+    
+
+class ResetApplicationsView(APIView):
+    """
+    Endpoint for resetting application instances to application_status = "UNPROCESSED" (Filter out those who only applied).
+    """
+
+    permission_classes = [IsHeadOfficer]
+
+    def post(self, request, *args, **kwargs):
+        # Reset application instances
+        Applications.objects.filter(application_status__in=['ACCEPTED', 'REJECTED']).update(application_status=Applications.Status.UNPROCESSED)
+
+        return Response({"message": "Application instances reset successfully for the next semester."}, status=status.HTTP_200_OK)
