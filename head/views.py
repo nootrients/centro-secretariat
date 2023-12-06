@@ -449,8 +449,7 @@ class GenerateYearlyScholarshipDataCSV(APIView):
     Endpoint for generating a CSV file containing the yearly scholarship data
     """
 
-    # permission_classes = [IsHeadOfficer, ]
-    permission_classes = [AllowAny, ]
+    permission_classes = [IsHeadOfficer, ]
 
     def get(self, request, *args, **kwargs):
         data_objects = YearlyScholarshipData.objects.all()
