@@ -17,4 +17,5 @@ urlpatterns = [
 
     path('dashboard/download-csv/', views.DashboardDataDownloadView.as_view(), name='dashboard-download-csv'),
     path('forecasting/', views.ForecastView.as_view(), name='forecast'),
+    path('get-is-ongoing/', views.GetIsOngoingConstraint.as_view(), name='get-is-ongoing'),
 ]

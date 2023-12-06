@@ -604,3 +604,14 @@ class ResetApplicationsView(APIView):
         Applications.objects.filter(application_status__in=['ACCEPTED', 'REJECTED']).update(application_status=Applications.Status.UNPROCESSED)
 
         return Response({"message": "Application instances reset successfully for the next semester."}, status=status.HTTP_200_OK)
+
+
+class GetIsOngoingConstraint(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        eligibility_instance = EligibilityConfig.objects.first()
+
+        instance_is_ongoing_value = eligibility_instance.is_ongoing
+
+        return Response(instance_is_ongoing_value)
