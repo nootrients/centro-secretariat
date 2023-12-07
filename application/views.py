@@ -211,8 +211,16 @@ class ApplicationForm(CreateAPIView):
 
                 if serializer.is_valid():
                     serializer.save()
+                    
+                    application_reference_id = serializer.instance.application_reference_id
+
+                    response_data = {
+                        'status': 'success',
+                        'message': 'Data has been successfully processed and stored temporarily to TempApplications',
+                        'application_reference_id': application_reference_id,
+                    }
         
-            return Response({'status': 'success', 'message': 'Data has been successfully processed and stored temporarily to TempApplications'}, status=status.HTTP_200_OK)
+            return Response(response_data, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
