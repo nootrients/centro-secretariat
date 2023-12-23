@@ -14,6 +14,7 @@ from rest_framework import generics, status
 from django.db.models import Count
 from django.http import HttpResponse
 from django.http import JsonResponse
+from django.db.models import Q
 
 from accounts.permissions import IsHeadOfficer
 
@@ -367,7 +368,8 @@ class SaveYearlyPerformance(APIView):
         year = datetime.date.today().year
         semester = eligibility_constraint_instance.semester
         
-        total_applications = Applications.objects.filter(is_eligible=True).count()
+        # total_applications = Applications.objects.filter(is_eligible=True).count()
+        total_applications = Applications.objects.filter(Q(is_eligible=True) & ~Q(application_status='UNPROCESSED')).count()
         total_accepted = Applications.objects.filter(application_status="ACCEPTED").count()
         total_rejected = Applications.objects.filter(application_status="REJECTED").count()
         total_new = Applications.objects.filter(applicant_status=Applications.ApplicantStatus.NEW_APPLICANT, application_status="ACCEPTED").count()
