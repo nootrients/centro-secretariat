@@ -58,7 +58,7 @@ class DashboardDataView(APIView):
         MERIT_INCENTIVE = 5000
 
         # Total number of applicants
-        total_applicants_count = Applications.objects.filter(application_status="ACCEPTED").count()
+        total_applicants_count = Applications.objects.count()
         new_applicants_count = Applications.objects.filter(applicant_status=Applications.ApplicantStatus.NEW_APPLICANT, application_status="ACCEPTED").count()
         renewing_applicants_count = Applications.objects.filter(applicant_status=Applications.ApplicantStatus.RENEWING_APPLICANT, application_status="ACCEPTED").count()
         graduating_scholars_count = Applications.objects.filter(is_graduating=True, application_status = "ACCEPTED").count()
