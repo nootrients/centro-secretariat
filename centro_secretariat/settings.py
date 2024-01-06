@@ -30,7 +30,8 @@ environ.Env.read_env()
 SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG')
+DEBUG = False
+# DEBUG = os.environ.get('DEBUG')
 # DEBUG = True
 
 ALLOWED_HOSTS = ['*']
@@ -116,10 +117,11 @@ WSGI_APPLICATION = "centro_secretariat.wsgi.application"
 # }
 
 # Render PostgreSQL database
-database_url = os.environ.get('DATABASE_URL')
+# database_url = os.environ.get('DATABASE_URL')
 
 DATABASES = {
-    'default': dj_database_url.parse(database_url)
+    # 'default': dj_database_url.parse(database_url)
+    'default': dj_database_url.parse('postgres://centro_secretariat_render_db_user:HUD0h4sDAz3B2VfGzRGlf24VucS270MA@dpg-clhdvg58td7s73bnv6l0-a.singapore-postgres.render.com/centro_secretariat_render_db')
 }
 
 # Password validation

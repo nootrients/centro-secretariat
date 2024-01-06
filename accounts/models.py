@@ -170,9 +170,9 @@ class UserProfile(models.Model):
 
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, null=True, blank=True, related_name='profile')
 
-    firstname = models.CharField(max_length=30)
-    lastname = models.CharField(max_length=30)
-    middlename = models.CharField(max_length=30)
+    firstname = models.CharField(max_length=100)
+    lastname = models.CharField(max_length=100)
+    middlename = models.CharField(max_length=100)
 
     gender = models.ForeignKey(Gender, on_delete=models.CASCADE, default=1)
     
@@ -277,7 +277,7 @@ def create_user_profile(sender, instance, created, **kwargs):
 
 
 class ScholarProfile(UserProfile):
-    years_of_residency = models.CharField(max_length = 30, null=True, blank=False)
+    years_of_residency = models.CharField(max_length = 100, null=True, blank=False)
     scholarship_type = models.CharField(max_length=20, null=True, blank=False,)
 
     # Determine if the applicant has already graduated
