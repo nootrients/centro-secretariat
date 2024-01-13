@@ -27,8 +27,7 @@ environ.Env.read_env()
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# SECRET_KEY = os.environ.get('SECRET_KEY')
-SECRET_KEY = 'django-insecure-iin#mf8t%p9@p%6qo9#%v*buqal^9xd5vh53)7!w@h#s4ju_4d'
+SECRET_KEY = os.environ.get('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 # DEBUG = os.environ.get('DEBUG')
@@ -117,11 +116,10 @@ WSGI_APPLICATION = "centro_secretariat.wsgi.application"
 # }
 
 # Render PostgreSQL database
-# database_url = os.environ.get('DATABASE_URL')
+database_url = os.environ.get('DATABASE_URL')
 
 DATABASES = {
-    'default': dj_database_url.parse('postgres://centro_secretariat_render_db_user:HUD0h4sDAz3B2VfGzRGlf24VucS270MA@dpg-clhdvg58td7s73bnv6l0-a.singapore-postgres.render.com/centro_secretariat_render_db')
-    #'default': dj_database_url.parse(database_url)
+    'default': dj_database_url.parse(database_url)
 }
 
 # Password validation
