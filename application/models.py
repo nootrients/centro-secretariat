@@ -459,7 +459,7 @@ class TempApplications(models.Model):
     district = models.CharField(max_length=3, null=True, choices=District.choices)            # Editable = False || Auto-fill based on Barangay's value
     
     email_address = models.EmailField(unique=True, null=True, blank=False)
-    personalized_facebook_link = models.CharField(max_length=100, null=True, blank=False)
+    personalized_facebook_link = models.TextField(null=True, blank=False)
 
     religion = models.CharField(max_length=30, choices=Religion.choices, null=True, blank=False)
 
